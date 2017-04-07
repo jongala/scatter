@@ -34,14 +34,20 @@
         return points;
     }
 
-    function circle(ctx, x, y, R, color) {
-        if (color) {
-            ctx.strokeStyle = color;
-        }
+    function circle(ctx, x, y, R, stroke, fill) {
+
         ctx.beginPath();
         ctx.moveTo(x + R, y);
         ctx.arc(x, y, R, 0, TWOPI, false);
-        ctx.stroke();
+        if (stroke) {
+            ctx.strokeStyle = stroke;
+            ctx.stroke();
+        }
+        if (fill) {
+            ctx.fillStyle = fill;
+            ctx.fill();
+        }
+
         ctx.closePath();
     };
 
@@ -50,8 +56,9 @@
     var el = document.querySelector('#example');
     var ctx = el.getContext('2d');
 
-    var cellSize = 15;
+    var cellSize = 40;
     var R = cellSize / 2;
+    var pointSize = cellSize/8;
     var w = el.width;
     var h = el.height;
 
@@ -74,13 +81,22 @@
             var x = p[0];
             var y = p[1];
 
+            ctx.globalCompositeOperation = 'screen';
+            ctx.globalAlpha = 0.5;
+
             // the area
-            circle(ctx, x, y, R, '#fff');
-            
+            circle(ctx, x, y, cellSize, '#f99', '#fdd');
+
+            ctx.globalCompositeOperation = 'normal';
+            circle(ctx, x, y, R, '#f99', '#fff');
+
+            ctx.globalAlpha = 1;
+
             // the point
             var a = randomInRange(0, TWOPI);
-            var v = randomInRange(0, R) * randomInRange(0.80, 1.2);
-            circle(ctx, x + v * Math.cos(a), y + v * Math.sin(a), R/3, '#000');
+            var v = randomInRange(0, R - pointSize);
+            circle(ctx, x + v * Math.cos(a), y + v * Math.sin(a), pointSize, '#000');
+            circle(ctx, x + v * Math.cos(a), y + v * Math.sin(a), R, '#ace');
         });
     });
 
