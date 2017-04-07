@@ -2,12 +2,13 @@
 <head>
     <style>
         canvas {
-  border: 1px solid #ddd;
-}
+          border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
-    <canvas id="example" width="600" height="600"/>
+    <canvas id="large" width="600" height="600"></canvas>
+    <canvas id="small" width="200" height="200"></canvas>
     <script>
     function randomInRange(min, max) {
       return min + Math.random() * (max - min);
@@ -52,55 +53,65 @@
     };
 
     var floor = Math.floor;
-
-    var el = document.querySelector('#example');
-    var ctx = el.getContext('2d');
-
-    var cellSize = 40;
-    var R = cellSize / 2;
-    var pointSize = cellSize/8;
-    var w = el.width;
-    var h = el.height;
-
-    var cols = Math.floor(w / cellSize);
-    var rows = Math.floor(h / cellSize);
-
     var TWOPI = Math.PI * 2;
 
-    ctx.fillStyle = 'black';
-    ctx.strokeStyle = '#ccc';
-    //ctx.globalCompositeOperation = 'overlay';
 
-    var points = getTiledLayout(w, h, cellSize);
+    function scatter(selector, size, pointSize, decorate) {
+        var el = document.querySelector(selector);
+        var ctx = el.getContext('2d');
 
-    var start = new Date().getTime();
-    console.log('start drawing');
+        var cellSize = size;
+        var R = cellSize / 2;
+        var w = el.width;
+        var h = el.height;
 
-    points.forEach(function(r, row) {
-        r.forEach(function(p, col) {
-            var x = p[0];
-            var y = p[1];
+        var cols = Math.floor(w / cellSize);
+        var rows = Math.floor(h / cellSize);
 
-            ctx.globalCompositeOperation = 'screen';
-            ctx.globalAlpha = 0.5;
+        ctx.fillStyle = 'black';
+        ctx.strokeStyle = '#ccc';
 
-            // the area
-            circle(ctx, x, y, cellSize, '#f99', '#fdd');
+        var points = getTiledLayout(w, h, cellSize);
 
-            ctx.globalCompositeOperation = 'normal';
-            circle(ctx, x, y, R, '#f99', '#fff');
+        var start = new Date().getTime();
+        console.log('start drawing');
 
-            ctx.globalAlpha = 1;
+        points.forEach(function(r, row) {
+            r.forEach(function(p, col) {
+                var x = p[0];
+                var y = p[1];
 
-            // the point
-            var a = randomInRange(0, TWOPI);
-            var v = randomInRange(0, R - pointSize);
-            circle(ctx, x + v * Math.cos(a), y + v * Math.sin(a), pointSize, '#000');
-            circle(ctx, x + v * Math.cos(a), y + v * Math.sin(a), R, '#ace');
+                if (decorate) {
+                    ctx.globalCompositeOperation = 'screen';
+                    ctx.globalAlpha = 0.33;
+
+                    // the area
+                    circle(ctx, x, y, cellSize, '#f99', '#fdd');
+
+                    ctx.globalCompositeOperation = 'normal';
+                    circle(ctx, x, y, R, '#f99', '#fff');
+
+                    ctx.globalAlpha = 1;
+                }
+
+
+
+                // the point
+                var a = randomInRange(0, TWOPI);
+                var v = randomInRange(0, R - pointSize);
+                circle(ctx, x + v * Math.cos(a), y + v * Math.sin(a), pointSize, '#000');
+                if (decorate) {
+                    circle(ctx, x + v * Math.cos(a), y + v * Math.sin(a), R, '#ace');
+                }
+            });
         });
-    });
 
-    console.log('done', new Date().getTime() - start);
+        console.log('done', new Date().getTime() - start);
+    }
+
+    scatter('#large', 40, 5, true);
+    scatter('#small', 15, 1);
+
 
 
 
