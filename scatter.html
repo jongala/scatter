@@ -1,0 +1,139 @@
+<html>
+<head>
+    <style>
+        canvas {
+  border: 1px solid #ddd;
+}
+    </style>
+</head>
+<body>
+    <canvas id="example" width="600" height="600"/>
+    <script>
+    function randomInRange(min, max) {
+      return min + Math.random() * (max - min);
+    }
+
+    function pairAvg(ai, aj, bi, bj) {
+        var a = grid[ai] ? grid[ai][aj] : null;
+        var b = grid[bi] ? grid[bi][bj] : null;
+
+        if (a && b) {
+            return [ (a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+        } else if (a) {
+            return a;
+        } else if (b) {
+            return b;
+        }
+    }
+
+    var floor = Math.floor;
+
+    var el = document.querySelector('#example');
+    var ctx = el.getContext('2d');
+
+    var cellSize = 20;
+    var r = cellSize * .7071 / 2;
+    var w = el.width;
+    var h = el.height;
+
+    var cols = Math.floor(w / cellSize);
+    var rows = Math.floor(h / cellSize);
+
+    var TWOPI = Math.PI * 2;
+
+    ctx.fillStyle = 'black';
+    ctx.strokeStyle = '#eee';
+    
+    var grid = [];
+
+    // set up grid and stroke the cells
+    for (var i = 0 ; i < cols ; i++ ) {
+        grid[i] = [];
+        for (var j = 0 ; j < rows ; j++) {
+            var x = i * cellSize;
+            var y = j * cellSize;
+            ctx.strokeRect(x, y, cellSize, cellSize);
+            grid[i][j] = [x + cellSize/2, y + cellSize/2];
+        }
+    }
+
+    var cell;
+    var col;
+    // do even cells with random values
+    for (var i = 0 ; i < cols ; i+=2 ) {
+        for (var j = 0 ; j < rows ; j+=1) {
+            col = (j%2) ? i + 1 : i;
+            cell = grid[col][j];
+
+            ctx.fillStyle = 'rgba(0, 150, 255, 0.1)';
+            ctx.fillRect(
+                cell[0] - cellSize/2,
+                cell[1] - cellSize/2,
+                cellSize,
+                cellSize);
+            ctx.fillStyle = 'black';
+
+            cell[0] += randomInRange(-r, r);
+            cell[1] += randomInRange(-r, r);
+
+            ctx.beginPath();
+            ctx.arc(
+              cell[0],
+              cell[1], 
+              cellSize/10,
+              0, TWOPI, false);
+            ctx.fill();
+            ctx.closePath();
+        }
+    }
+
+    // do odd cells with avgs from neighbors
+    for (var i = 1 ; i < cols ; i+=2 ) {
+        for (var j = 0 ; j < rows ; j+=1) {
+            col = (j%2) ? i - 1 : i;
+            cell = grid[col][j];
+
+            ctx.fillStyle = 'rgba(255, 200, 0, 0.1)';
+            ctx.fillRect(
+                cell[0] - cellSize/2,
+                cell[1] - cellSize/2,
+                cellSize,
+                cellSize);
+            ctx.fillStyle = 'black';
+
+            var havg = pairAvg(col-1, j, col+1, j);
+            var vavg = pairAvg(col, j-1, col, j+1);
+
+            cell[0] =  (havg[0] + vavg[0]) / 2;
+
+            cell[1] =  (havg[1] + vavg[1]) / 2;
+
+            ctx.beginPath();
+            ctx.arc(
+              cell[0],
+              cell[1], 
+              cellSize/10,
+              0, TWOPI, false);
+            ctx.fill();
+            ctx.closePath();
+        }
+    }
+
+    /*grid.forEach(function(col, i) {
+        col.forEach(function(cell, j) {
+            cell[0] += randomInRange(-r, r);
+            cell[1] += randomInRange(-r, r);
+            ctx.beginPath();
+            ctx.arc(
+              cell[0],
+              cell[1], 
+              cellSize/10,
+              0, TWOPI, false);
+            ctx.fill();
+            ctx.closePath();
+        });
+    });*/
+
+</script>
+</body>
+</html>

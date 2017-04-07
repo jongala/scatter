@@ -1,0 +1,94 @@
+<html>
+<head>
+    <style>
+        canvas {
+  border: 1px solid #ddd;
+}
+    </style>
+</head>
+<body>
+    <canvas id="example" width="600" height="600"/>
+    <script>
+    function randomInRange(min, max) {
+      return min + Math.random() * (max - min);
+    }
+
+    // Generates hexagon center-points for non-overlapping tiling
+    function getTiledLayout(w, h, scale) {
+        var points = [];
+        var hexW = 2 * scale * 0.8660;
+        var hexH = scale * 1.5;
+        var rows = Math.ceil(h/hexH);
+        var cols = Math.ceil(w/hexW);
+        var offset;
+
+        for (var row = 0 ; row <= rows ; row++) {
+            var r = [];
+            for (var col = 0 ; col <= cols ; col++) {
+                offset = (row % 2)? (- scale * 0.8660 ) : 0;
+                r.push([col * hexW + offset, row * hexH]);
+            }
+            points.push(r);
+        }
+
+        return points;
+    }
+
+    function circle(ctx, x, y, R, color) {
+        if (color) {
+            ctx.strokeStyle = color;
+        }
+        ctx.beginPath();
+        ctx.moveTo(x + R, y);
+        ctx.arc(x, y, R, 0, TWOPI, false);
+        ctx.stroke();
+        ctx.closePath();
+    };
+
+    var floor = Math.floor;
+
+    var el = document.querySelector('#example');
+    var ctx = el.getContext('2d');
+
+    var cellSize = 15;
+    var R = cellSize / 2;
+    var w = el.width;
+    var h = el.height;
+
+    var cols = Math.floor(w / cellSize);
+    var rows = Math.floor(h / cellSize);
+
+    var TWOPI = Math.PI * 2;
+
+    ctx.fillStyle = 'black';
+    ctx.strokeStyle = '#ccc';
+    //ctx.globalCompositeOperation = 'overlay';
+
+    var points = getTiledLayout(w, h, cellSize);
+
+    var start = new Date().getTime();
+    console.log('start drawing');
+
+    points.forEach(function(r, row) {
+        r.forEach(function(p, col) {
+            var x = p[0];
+            var y = p[1];
+
+            // the area
+            circle(ctx, x, y, R, '#fff');
+            
+            // the point
+            var a = randomInRange(0, TWOPI);
+            var v = randomInRange(0, R) * randomInRange(0.80, 1.2);
+            circle(ctx, x + v * Math.cos(a), y + v * Math.sin(a), R/3, '#000');
+        });
+    });
+
+    console.log('done', new Date().getTime() - start);
+
+
+
+
+</script>
+</body>
+</html>
