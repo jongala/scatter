@@ -31,6 +31,7 @@
             }
             points.push(r);
         }
+        console.log('Rendering', rows * cols, 'points');
 
         return points;
     }
@@ -109,8 +110,8 @@
         console.log('done', new Date().getTime() - start);
     }
 
-    scatter('#large', 40, 5, true);
-    scatter('#small', 15, 1);
+    scatter('#large', randomInRange(30, 50), randomInRange(3, 6), true);
+    scatter('#small', 15, 0.5);
 
 
 
