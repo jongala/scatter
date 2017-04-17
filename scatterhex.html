@@ -52,6 +52,18 @@
         ctx.closePath();
     };
 
+    function triangle(ctx, p1, p2, p3, fill) {
+        if (fill) {
+            ctx.fillStyle = fill;
+        }
+        ctx.beginPath();
+        ctx.moveTo(p1[0], p1[1]);
+        ctx.lineTo(p2[0], p2[1]);
+        ctx.lineTo(p3[0], p3[1]);
+        ctx.closePath();
+        ctx.fill();
+    }
+
     var floor = Math.floor;
     var TWOPI = Math.PI * 2;
 
@@ -79,6 +91,7 @@
         console.log('start drawing');
 
         layout.forEach(function(r, row) {
+            points.push([]);
             r.forEach(function(p, col) {
                 var x = p[0];
                 var y = p[1];
@@ -102,11 +115,11 @@
                 var px = x + v * Math.cos(a);
                 var py = y + v * Math.sin(a);
 
-                points.push([px, py]);
+                points[row].push([px, py]);
 
                 circle(ctx, px, py, pointSize, '#000');
 
-                // show point exclusion zone                
+                // show point exclusion zone
                 if (decorate) {
                     circle(ctx, px, py, R, '#ace');
                 }
@@ -114,31 +127,45 @@
         });
 
         // now pack points in gaps
-        /*layout.forEach(function(r, row) {
-            r.forEach(function(p, col) {
-
-            });
-        });*/
-        for (var i = 0 ; i < layout.length - 1 ; i ++) {
-            var row = layout[i];
-            // top triangles
-            for (var j = 0; j < row.length - 1 ; j ++) {
+        var grid = points;
+        for (var i = 0 ; i < grid.length - 1 ; i++) {
+            var row = grid[i];
+            //for (var j = 0; j < row.length - 1 ; j++) {
+            for (var j = 0; j < row.length - 1 ; j++) {
                 var nextRowColOffset = (i % 2) ? 0 : 1;
-                var p1 = row[j];
-                var p2 = row[j + 1];
-                var p3 = layout[i + 1][j + nextRowColOffset];
+
+                // top triangles
+                var p1 = grid[i][j];
+                var p2 = grid[i][j + 1];
+                var p3 = grid[i + 1][j + nextRowColOffset];
 
                 ctx.fillStyle = '#ace';
-                ctx.globalAlpha = 0.5;
-                ctx.beginPath();
-                ctx.moveTo(p1[0], p1[1]);
-                ctx.lineTo(p2[0], p2[1]);
-                ctx.lineTo(p3[0], p3[1]);
-                ctx.closePath();
-                ctx.fill();
+                ctx.globalAlpha = 0.33;
+                ctx.globalCompositeOperation = 'multiply';
+                triangle(ctx, p1, p2, p3);
+
+                // bottom triangles
+
+                if ( i % 2 && j === 0) {
+                    continue;
+                }
+
+                var bottomColOffset = (i % 2) ? -1 : 0 ;
+
+                p2 = grid[i + 1][j + 1 + bottomColOffset];
+                p3 = grid[i + 1][j + bottomColOffset];
+
+                if(!p1 || !p2 || !p3) {
+                    console.log('no bottom at ', i, j + bottomColOffset, bottomColOffset);
+                }
+
+                ctx.fillStyle = nextRowColOffset ? '#aec' : '#ffc' ;
+                triangle(ctx, p1, p2, p3);
+
             }
         }
         ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'normal';
 
         console.log('Rendered ', points.length, 'points in', new Date().getTime() - start, 'ms');
     }
