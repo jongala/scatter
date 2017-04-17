@@ -64,6 +64,12 @@
         ctx.fill();
     }
 
+    function isTooClose(p1, p2, d) {
+        var dx = p2[0] - p1[0];
+        var dy = p2[1] - p1[1];
+        return ((dx * dx + dy * dy) < (d * d));
+    }
+
     function avgPoint(p1, p2, p3) {
         return [
             (p1[0] + p2[0] + p3[0])/3,
@@ -149,12 +155,21 @@
 
                 var packed = avgPoint(p1, p2, p3);
                 ctx.globalAlpha = 1;
-                circle(ctx, packed[0], packed[1], pointSize, '#111');
+                if (isTooClose(packed, p1, cellSize) ||
+                    isTooClose(packed, p2, cellSize) ||
+                    isTooClose(packed, p3, cellSize)) {
+                    decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa');
+                    decorate && circle(ctx, packed[0], packed[1], R, '#fdc');
+                } else {
+                    circle(ctx, packed[0], packed[1], pointSize, '#111');
+                    decorate && circle(ctx, packed[0], packed[1], R, '#cf9');
+                }
+
 
 
                 if (decorate) {
                     ctx.fillStyle = '#ace';
-                    ctx.globalAlpha = 0.33;
+                    ctx.globalAlpha = 0.2;
                     ctx.globalCompositeOperation = 'multiply';
                     triangle(ctx, p1, p2, p3);
                 }
@@ -177,11 +192,19 @@
 
                 packed = avgPoint(p1, p2, p3);
                 ctx.globalAlpha = 1;
-                circle(ctx, packed[0], packed[1], pointSize, '#111');
+                if (isTooClose(packed, p1, cellSize) ||
+                    isTooClose(packed, p2, cellSize) ||
+                    isTooClose(packed, p3, cellSize)) {
+                    decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa');
+                    decorate && circle(ctx, packed[0], packed[1], R, '#fdc');
+                } else {
+                    circle(ctx, packed[0], packed[1], pointSize, '#111');
+                    decorate && circle(ctx, packed[0], packed[1], R, '#cf9');
+                }
 
                 if (decorate) {
                     ctx.fillStyle = nextRowColOffset ? '#aec' : '#ffc' ;
-                    ctx.globalAlpha = 0.33;
+                    ctx.globalAlpha = 0.2;
                     triangle(ctx, p1, p2, p3);
                 }
 
@@ -191,7 +214,9 @@
         ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = 'normal';
 
-        console.log('Rendered ', points.length, 'points in', new Date().getTime() - start, 'ms');
+        var pointCount = points.length * points[0].length;
+
+        console.log('Rendered ', pointCount, 'points in', new Date().getTime() - start, 'ms');
     }
 
     scatter('#large', randomInRange(30, 50), randomInRange(3, 6), true);
