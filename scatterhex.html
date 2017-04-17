@@ -31,7 +31,6 @@
             }
             points.push(r);
         }
-        console.log('Rendering', rows * cols, 'points');
 
         return points;
     }
@@ -72,12 +71,14 @@
         ctx.fillStyle = 'black';
         ctx.strokeStyle = '#ccc';
 
-        var points = getTiledLayout(w, h, cellSize);
+        var layout = getTiledLayout(w, h, cellSize);
+        var points = [];
+        var packed = [];
 
         var start = new Date().getTime();
         console.log('start drawing');
 
-        points.forEach(function(r, row) {
+        layout.forEach(function(r, row) {
             r.forEach(function(p, col) {
                 var x = p[0];
                 var y = p[1];
@@ -95,19 +96,51 @@
                     ctx.globalAlpha = 1;
                 }
 
-
-
                 // the point
                 var a = randomInRange(0, TWOPI);
                 var v = randomInRange(0, R - pointSize);
-                circle(ctx, x + v * Math.cos(a), y + v * Math.sin(a), pointSize, '#000');
+                var px = x + v * Math.cos(a);
+                var py = y + v * Math.sin(a);
+
+                points.push([px, py]);
+
+                circle(ctx, px, py, pointSize, '#000');
+
+                // show point exclusion zone                
                 if (decorate) {
-                    circle(ctx, x + v * Math.cos(a), y + v * Math.sin(a), R, '#ace');
+                    circle(ctx, px, py, R, '#ace');
                 }
             });
         });
 
-        console.log('done', new Date().getTime() - start);
+        // now pack points in gaps
+        /*layout.forEach(function(r, row) {
+            r.forEach(function(p, col) {
+
+            });
+        });*/
+        for (var i = 0 ; i < layout.length - 1 ; i ++) {
+            var row = layout[i];
+            // top triangles
+            for (var j = 0; j < row.length - 1 ; j ++) {
+                var nextRowColOffset = (i % 2) ? 0 : 1;
+                var p1 = row[j];
+                var p2 = row[j + 1];
+                var p3 = layout[i + 1][j + nextRowColOffset];
+
+                ctx.fillStyle = '#ace';
+                ctx.globalAlpha = 0.5;
+                ctx.beginPath();
+                ctx.moveTo(p1[0], p1[1]);
+                ctx.lineTo(p2[0], p2[1]);
+                ctx.lineTo(p3[0], p3[1]);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+        ctx.globalAlpha = 1;
+
+        console.log('Rendered ', points.length, 'points in', new Date().getTime() - start, 'ms');
     }
 
     scatter('#large', randomInRange(30, 50), randomInRange(3, 6), true);
