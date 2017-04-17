@@ -100,6 +100,10 @@
         var points = [];
         var packed = [];
 
+        if (decorate) {
+            ctx.globalCompositeOperation = 'multiply';
+        }
+
         var start = new Date().getTime();
         console.log('start drawing');
 
@@ -116,7 +120,7 @@
                     // the area
                     circle(ctx, x, y, cellSize, '#f99', '#fdd');
 
-                    ctx.globalCompositeOperation = 'normal';
+                    ctx.globalCompositeOperation = 'multiply';
                     circle(ctx, x, y, R, '#f99', '#fff');
 
                     ctx.globalAlpha = 1;
@@ -170,7 +174,6 @@
                 if (decorate) {
                     ctx.fillStyle = '#ace';
                     ctx.globalAlpha = 0.2;
-                    ctx.globalCompositeOperation = 'multiply';
                     triangle(ctx, p1, p2, p3);
                 }
 
@@ -203,7 +206,7 @@
                 }
 
                 if (decorate) {
-                    ctx.fillStyle = nextRowColOffset ? '#aec' : '#ffc' ;
+                    ctx.fillStyle = '#def'; //nextRowColOffset ? '#aec' : '#ffc' ;
                     ctx.globalAlpha = 0.2;
                     triangle(ctx, p1, p2, p3);
                 }
@@ -212,7 +215,6 @@
             }
         }
         ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = 'normal';
 
         var pointCount = points.length * points[0].length;
 
