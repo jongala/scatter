@@ -64,6 +64,13 @@
         ctx.fill();
     }
 
+    function avgPoint(p1, p2, p3) {
+        return [
+            (p1[0] + p2[0] + p3[0])/3,
+            (p1[1] + p2[1] + p3[1])/3
+         ];
+    }
+
     var floor = Math.floor;
     var TWOPI = Math.PI * 2;
 
@@ -139,10 +146,19 @@
                 var p2 = grid[i][j + 1];
                 var p3 = grid[i + 1][j + nextRowColOffset];
 
-                ctx.fillStyle = '#ace';
-                ctx.globalAlpha = 0.33;
-                ctx.globalCompositeOperation = 'multiply';
-                triangle(ctx, p1, p2, p3);
+
+                var packed = avgPoint(p1, p2, p3);
+                ctx.globalAlpha = 1;
+                circle(ctx, packed[0], packed[1], pointSize, '#111');
+
+
+                if (decorate) {
+                    ctx.fillStyle = '#ace';
+                    ctx.globalAlpha = 0.33;
+                    ctx.globalCompositeOperation = 'multiply';
+                    triangle(ctx, p1, p2, p3);
+                }
+
 
                 // bottom triangles
 
@@ -159,8 +175,16 @@
                     console.log('no bottom at ', i, j + bottomColOffset, bottomColOffset);
                 }
 
-                ctx.fillStyle = nextRowColOffset ? '#aec' : '#ffc' ;
-                triangle(ctx, p1, p2, p3);
+                packed = avgPoint(p1, p2, p3);
+                ctx.globalAlpha = 1;
+                circle(ctx, packed[0], packed[1], pointSize, '#111');
+
+                if (decorate) {
+                    ctx.fillStyle = nextRowColOffset ? '#aec' : '#ffc' ;
+                    ctx.globalAlpha = 0.33;
+                    triangle(ctx, p1, p2, p3);
+                }
+
 
             }
         }
