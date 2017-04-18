@@ -68,12 +68,6 @@
         ctx.fill();
     }
 
-    function isTooClose(p1, p2, d) {
-        var dx = p2[0] - p1[0];
-        var dy = p2[1] - p1[1];
-        return ((dx * dx + dy * dy) < (d * d));
-    }
-
     function avgPoints(points) {
         var avg=[0, 0];
         avg[0] = points.reduce(function (m, v) { return m + v[0]; }, 0) / points.length;
@@ -111,7 +105,11 @@
         CCx = (bAC - bAB) / (mAB - mAC);
         CCy = mAB * CCx + bAB;
 
-        return [CCx, CCy];
+        var dx = CCx - ax;
+        var dy = CCy - ay;
+        var r = Math.sqrt(dx * dx + dy * dy);
+
+        return {x: CCx, y: CCy, r: r};
     }
 
     
@@ -134,6 +132,7 @@
 
         var layout = getTiledLayout(w, h, cellSize);
         var points = [];
+        var cc;
         var packed = [];
 
         if (decorate) {
@@ -193,15 +192,14 @@
                 var p3 = grid[i + 1][j + nextRowColOffset];
 
 
-                var packed = circumcenter(p1, p2, p3);
+                cc = circumcenter(p1, p2, p3);
+                packed = [cc.x, cc.y];
                 ctx.globalAlpha = 1;
-                if (isTooClose(packed, p1, cellSize) ||
-                    isTooClose(packed, p2, cellSize) ||
-                    isTooClose(packed, p3, cellSize)) {
+                if (cc.r < cellSize) {
                     decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa');
                     decorate && circle(ctx, packed[0], packed[1], R, '#fdc');
                 } else {
-                    circle(ctx, packed[0], packed[1], pointSize, null, '#333');
+                    circle(ctx, packed[0], packed[1], pointSize, null, '#400');
                     decorate && circle(ctx, packed[0], packed[1], R, '#cf9');
                 }
 
@@ -229,15 +227,14 @@
                     console.log('no bottom at ', i, j + bottomColOffset, bottomColOffset);
                 }
 
-                packed = circumcenter(p1, p2, p3);
+                cc = circumcenter(p1, p2, p3);
+                packed = [cc.x, cc.y];
                 ctx.globalAlpha = 1;
-                if (isTooClose(packed, p1, cellSize) ||
-                    isTooClose(packed, p2, cellSize) ||
-                    isTooClose(packed, p3, cellSize)) {
+                if (cc.r < cellSize) {
                     decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa');
                     decorate && circle(ctx, packed[0], packed[1], R, '#fdc');
                 } else {
-                    circle(ctx, packed[0], packed[1], pointSize, null, '#333');
+                    circle(ctx, packed[0], packed[1], pointSize, null, '#004');
                     decorate && circle(ctx, packed[0], packed[1], R, '#cf9');
                 }
 
