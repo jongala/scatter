@@ -10,6 +10,10 @@
     <canvas id="large" width="600" height="600"></canvas>
     <canvas id="small" width="200" height="200"></canvas>
     <script>
+
+    var floor = Math.floor;
+    var TWOPI = Math.PI * 2;
+
     function randomInRange(min, max) {
       return min + Math.random() * (max - min);
     }
@@ -70,15 +74,47 @@
         return ((dx * dx + dy * dy) < (d * d));
     }
 
-    function avgPoint(p1, p2, p3) {
-        return [
-            (p1[0] + p2[0] + p3[0])/3,
-            (p1[1] + p2[1] + p3[1])/3
-         ];
+    function avgPoints(points) {
+        var avg=[0, 0];
+        avg[0] = points.reduce(function (m, v) { return m + v[0]; }, 0) / points.length;
+        avg[1] = points.reduce(function (m, v) { return m + v[1]; }, 0) / points.length;
+        return avg;
     }
 
-    var floor = Math.floor;
-    var TWOPI = Math.PI * 2;
+    function circumcenter(a, b, c) {
+        var ax = a[0];
+        var ay = a[1];
+        var bx = b[0];
+        var by = b[1];
+        var cx = c[0];
+        var cy = c[1];
+
+        // midpoints
+        var midAB = avgPoints([a, b]);
+        var midAC = avgPoints([a, c]);
+
+        // slopes
+        var mAB = (by - ay) / (bx - ax);
+        var mAC = (cy - ay) / (cx - ax);
+        // invert for perpendicular
+        mAB = -1/mAB;
+        mAC = -1/mAC;
+
+        // offsets
+        var bAB = midAB[1] - mAB * midAB[0];
+        var bAC = midAC[1] - mAC * midAC[0];
+
+        var CCx;
+        var CCy;
+
+        // algebra!
+        CCx = (bAC - bAB) / (mAB - mAC);
+        CCy = mAB * CCx + bAB;
+
+        return [CCx, CCy];
+    }
+
+    
 
 
     function scatter(selector, size, pointSize, decorate) {
@@ -134,7 +170,7 @@
 
                 points[row].push([px, py]);
 
-                circle(ctx, px, py, pointSize, '#000');
+                circle(ctx, px, py, pointSize, null, '#000');
 
                 // show point exclusion zone
                 if (decorate) {
@@ -157,7 +193,7 @@
                 var p3 = grid[i + 1][j + nextRowColOffset];
 
 
-                var packed = avgPoint(p1, p2, p3);
+                var packed = circumcenter(p1, p2, p3);
                 ctx.globalAlpha = 1;
                 if (isTooClose(packed, p1, cellSize) ||
                     isTooClose(packed, p2, cellSize) ||
@@ -165,7 +201,7 @@
                     decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa');
                     decorate && circle(ctx, packed[0], packed[1], R, '#fdc');
                 } else {
-                    circle(ctx, packed[0], packed[1], pointSize, '#111');
+                    circle(ctx, packed[0], packed[1], pointSize, null, '#333');
                     decorate && circle(ctx, packed[0], packed[1], R, '#cf9');
                 }
 
@@ -193,7 +229,7 @@
                     console.log('no bottom at ', i, j + bottomColOffset, bottomColOffset);
                 }
 
-                packed = avgPoint(p1, p2, p3);
+                packed = circumcenter(p1, p2, p3);
                 ctx.globalAlpha = 1;
                 if (isTooClose(packed, p1, cellSize) ||
                     isTooClose(packed, p2, cellSize) ||
@@ -201,7 +237,7 @@
                     decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa');
                     decorate && circle(ctx, packed[0], packed[1], R, '#fdc');
                 } else {
-                    circle(ctx, packed[0], packed[1], pointSize, '#111');
+                    circle(ctx, packed[0], packed[1], pointSize, null, '#333');
                     decorate && circle(ctx, packed[0], packed[1], R, '#cf9');
                 }
 
