@@ -97,6 +97,20 @@
         return avg;
     }
 
+    function isTooClose(p1, p2, d) {
+        var dx = p2[0] - p1[0];
+        var dy = p2[1] - p1[1];
+        return ((dx * dx + dy * dy) < (d * d));
+    }
+
+    function checkSet(p, others, d) {
+        var ok = true;
+        others.forEach(function(o) {
+            ok = ok && isTooClose(p, o, d)
+        });
+        return ok;
+    }
+
     function circumcenter(a, b, c) {
         var ax = a[0];
         var ay = a[1];
@@ -298,25 +312,58 @@
 
 
                 ctx.globalAlpha = 1;
-                if (cc.r < cellSize) {
-                    decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa', '#fff');
-                    decorate && circle(ctx, packed[0], packed[1], R, '#fdc', '#fff');
-                } else {
+
+                // check circumcenter against its component points
+                var ccOK = (cc.r < cellSize);
+                // now check against the neighboring packed points
+                if (ccOK && pp1 && pp2 && pp3) {
+                    ccOK = checkSet(packed, [pp1, pp2, pp3], cellSize);
+                }
+
+                var tripOK = false;
+                if (tricc) {
+                    tripOK = (tricc.r < cellSize);
+
+                    if (tripOK) {
+                        tripOK = checkSet(tripacked, [p1,p2,p3], cellSize);
+                    }
+                }
+
+
+                if (ccOK) {
+                    console.log('packed');
                     circle(ctx, packed[0], packed[1], pointSize, null, '#900');
                     decorate && circle(ctx, packed[0], packed[1], R, '#cf9', null);
+                } else {
+                    decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa', '#fff');
+                    decorate && circle(ctx, packed[0], packed[1], R, '#fdc', '#fff');
                 }
 
                 if (tricc) {
-                    if (tricc.r < cellSize) {
+                    if (tripOK) {
+                        console.log('tripacked');
+                        circle(ctx, tripacked[0], tripacked[1], pointSize, null, '#900');
+                        decorate && circle(ctx, tripacked[0], tripacked[1], R, '#cf9', null);
+                    } else {
                         decorate && cross(ctx, tripacked[0], tripacked[1], pointSize, '#faa', '#fff');
                         decorate && circle(ctx, tripacked[0], tripacked[1], R, '#fdc', '#fff');
-                    } else {
-                        cross(ctx, tripacked[0], tripacked[1], pointSize, '#900');
-                        decorate && circle(ctx, tripacked[0], tripacked[1], R, '#cf9', null);
                     }
-                } else {
-                    console.log('no tricc', i, j);
                 }
+
+                if (!ccOK && !tripOK && tricc) {
+                    packed = avgPoints([packed, tripacked]);
+                    ccOK = checkSet(packed, [p1, p2, p3, pp1, pp2, pp3], cellSize);
+                    if (ccOK) {
+                        console.log('avg packed');
+                        circle(ctx, packed[0], packed[1], pointSize, null, '#900');
+                        decorate && circle(ctx, packed[0], packed[1], R, '#cf9', null);
+                    } else {
+                        decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa', '#fff');
+                        decorate && circle(ctx, packed[0], packed[1], R, '#fdc', '#fff');
+                    }
+
+                }
+
 
                 if (decorate) {
                     ctx.globalAlpha = 0.1;
