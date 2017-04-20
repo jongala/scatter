@@ -3,12 +3,25 @@
     <style>
         canvas {
           border: 1px solid #ddd;
+          display: block;
+          clear: both;
         }
+
+        html {
+            margin: 0;
+            padding: 20px;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
     </style>
 </head>
 <body>
     <canvas id="large" width="800" height="400"></canvas>
     <canvas id="small" width="800" height="400"></canvas>
+    <canvas id="medium" width="800" height="400"></canvas>
     <script>
 
     var floor = Math.floor;
@@ -40,32 +53,41 @@
     }
 
     function circle(ctx, x, y, R, stroke, fill) {
-
         ctx.beginPath();
         ctx.moveTo(x + R, y);
         ctx.arc(x, y, R, 0, TWOPI, false);
-        if (stroke) {
-            ctx.strokeStyle = stroke;
-            ctx.stroke();
-        }
-        if (fill) {
-            ctx.fillStyle = fill;
-            ctx.fill();
-        }
-
         ctx.closePath();
+
+        ctx.strokeStyle = stroke || '';
+        stroke && ctx.stroke();
+        ctx.fillStyle = fill || '';
+        fill && ctx.fill();
     };
 
-    function triangle(ctx, p1, p2, p3, fill) {
-        if (fill) {
-            ctx.fillStyle = fill;
-        }
+    function triangle(ctx, p1, p2, p3, stroke, fill) {
+        //return;
         ctx.beginPath();
         ctx.moveTo(p1[0], p1[1]);
         ctx.lineTo(p2[0], p2[1]);
         ctx.lineTo(p3[0], p3[1]);
         ctx.closePath();
-        ctx.fill();
+        ctx.strokeStyle = stroke || '';
+        stroke && ctx.stroke();
+        ctx.fillStyle = fill || '';
+        fill && ctx.fill();
+    }
+
+    function cross(ctx, x, y, size, color) {
+        size = size || 5;
+        color = color || 'black';
+        ctx.beginPath();
+        ctx.moveTo(x - size, y);
+        ctx.lineTo(x + size, y);
+        ctx.moveTo(x, y - size);
+        ctx.lineTo(x, y + size);
+        ctx.closePath();
+        ctx.strokeStyle = color;
+        ctx.stroke();
     }
 
     function avgPoints(points) {
@@ -112,17 +134,23 @@
         return {x: CCx, y: CCy, r: r};
     }
 
-    
+
 
 
     function scatter(selector, size, pointSize, decorate) {
         var el = document.querySelector(selector);
         var ctx = el.getContext('2d');
 
+
+
         var cellSize = size;
         var R = cellSize / 2;
         var w = el.width;
         var h = el.height;
+
+
+        /*ctx.scale(0.8, 0.8);
+        ctx.translate( w/10, h/10);*/
 
         var cols = Math.floor(w / cellSize);
         var rows = Math.floor(h / cellSize);
@@ -131,9 +159,15 @@
         ctx.strokeStyle = '#ccc';
 
         var layout = getTiledLayout(w, h, cellSize);
+        // [rows…][cols]
         var points = [];
-        var cc;
-        var packed = [];
+        var topTriangles = [];
+
+        // placement vars
+        var cc; // circumcenter from points
+        var packed = []; // coords from cc
+        var tricc; // circumcenter from packed top triangles
+        var tripacked; // coords from tricc
 
         if (decorate) {
             ctx.globalCompositeOperation = 'multiply';
@@ -144,11 +178,12 @@
 
         layout.forEach(function(r, row) {
             points.push([]);
+            topTriangles.push([]);
             r.forEach(function(p, col) {
                 var x = p[0];
                 var y = p[1];
 
-                if (decorate) {
+                /*if (decorate) {
                     ctx.globalCompositeOperation = 'screen';
                     ctx.globalAlpha = 0.33;
 
@@ -159,7 +194,7 @@
                     circle(ctx, x, y, R, '#f99', '#fff');
 
                     ctx.globalAlpha = 1;
-                }
+                }*/
 
                 // the point
                 var a = randomInRange(0, TWOPI);
@@ -173,80 +208,123 @@
 
                 // show point exclusion zone
                 if (decorate) {
-                    circle(ctx, px, py, R, '#ace');
+                    circle(ctx, px, py, R, '#ace', '#fff');
                 }
             });
         });
 
-        // now pack points in gaps
+
+        // now pack points in top triangles
         var grid = points;
         for (var i = 0 ; i < grid.length - 1 ; i++) {
-            var row = grid[i];
-            //for (var j = 0; j < row.length - 1 ; j++) {
-            for (var j = 0; j < row.length - 1 ; j++) {
+            var rowlen = grid[i].length;
+            for (var j = 0; j < rowlen - 1 ; j++) {
                 var nextRowColOffset = (i % 2) ? 0 : 1;
 
-                // top triangles
+                // top triangles: get points from grid
                 var p1 = grid[i][j];
                 var p2 = grid[i][j + 1];
                 var p3 = grid[i + 1][j + nextRowColOffset];
 
-
                 cc = circumcenter(p1, p2, p3);
                 packed = [cc.x, cc.y];
+
+                topTriangles[i].push(packed);
+
                 ctx.globalAlpha = 1;
                 if (cc.r < cellSize) {
-                    decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa');
-                    decorate && circle(ctx, packed[0], packed[1], R, '#fdc');
+                    decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa', null);
+                    decorate && circle(ctx, packed[0], packed[1], R, '#fdc', null);
                 } else {
-                    circle(ctx, packed[0], packed[1], pointSize, null, '#400');
-                    decorate && circle(ctx, packed[0], packed[1], R, '#cf9');
-                }
-
-
-
-                if (decorate) {
-                    ctx.fillStyle = '#ace';
-                    ctx.globalAlpha = 0.2;
-                    triangle(ctx, p1, p2, p3);
-                }
-
-
-                // bottom triangles
-
-                if ( i % 2 && j === 0) {
-                    continue;
-                }
-
-                var bottomColOffset = (i % 2) ? -1 : 0 ;
-
-                p2 = grid[i + 1][j + 1 + bottomColOffset];
-                p3 = grid[i + 1][j + bottomColOffset];
-
-                if(!p1 || !p2 || !p3) {
-                    console.log('no bottom at ', i, j + bottomColOffset, bottomColOffset);
-                }
-
-                cc = circumcenter(p1, p2, p3);
-                packed = [cc.x, cc.y];
-                ctx.globalAlpha = 1;
-                if (cc.r < cellSize) {
-                    decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa');
-                    decorate && circle(ctx, packed[0], packed[1], R, '#fdc');
-                } else {
-                    circle(ctx, packed[0], packed[1], pointSize, null, '#004');
+                    circle(ctx, packed[0], packed[1], pointSize, null, '#009');
                     decorate && circle(ctx, packed[0], packed[1], R, '#cf9');
                 }
 
                 if (decorate) {
-                    ctx.fillStyle = '#def'; //nextRowColOffset ? '#aec' : '#ffc' ;
                     ctx.globalAlpha = 0.2;
-                    triangle(ctx, p1, p2, p3);
+                    triangle(ctx, p1, p2, p3, '#fff', '#ffc');
                 }
-
-
             }
         }
+
+
+        // now pack points in bottom triangles
+        //var grid = points;
+        for (var i = 0 ; i < grid.length - 1 ; i++) {
+            var rowlen = grid[i].length;
+            for (var j = 0; j < rowlen ; j++) {
+                // bottom triangles
+
+                var odd = (i % 2);
+
+                if ( odd ) {
+                    if (j === 0) {
+                        continue;
+                    }
+                } else {
+                    if (j === rowlen -1) {
+                        continue;
+                    }
+                }
+
+                var colOffset = odd ? -1 : 0 ;
+
+                var p1 = grid[i][j];
+                var p2 = grid[i + 1][j + colOffset + 1];
+                var p3 = grid[i + 1][j + colOffset];
+
+
+                var pp1;
+                var pp2;
+                var pp3;
+
+                if (odd) {
+                    pp1 = topTriangles[i][j];
+                    pp2 = topTriangles[i][j-1];
+                    pp3 = topTriangles[i + 1][j + colOffset];
+                } else {
+                    pp1 = topTriangles[i][j];
+                    pp2 = topTriangles[i][j-1];
+                    pp3 = topTriangles[i + 1][j];
+                }
+
+                cc = circumcenter(p1, p2, p3);
+                packed = [cc.x, cc.y];
+
+                if (pp1 && pp2 && pp3) {
+                    tricc = circumcenter(pp1, pp2, pp3);
+                    tripacked = [tricc.x, tricc.y];
+                }
+
+
+                ctx.globalAlpha = 1;
+                if (cc.r < cellSize) {
+                    decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa', '#fff');
+                    decorate && circle(ctx, packed[0], packed[1], R, '#fdc', '#fff');
+                } else {
+                    circle(ctx, packed[0], packed[1], pointSize, null, '#900');
+                    decorate && circle(ctx, packed[0], packed[1], R, '#cf9', null);
+                }
+
+                if (tricc) {
+                    if (tricc.r < cellSize) {
+                        decorate && cross(ctx, tripacked[0], tripacked[1], pointSize, '#faa', '#fff');
+                        decorate && circle(ctx, tripacked[0], tripacked[1], R, '#fdc', '#fff');
+                    } else {
+                        cross(ctx, tripacked[0], tripacked[1], pointSize, '#900');
+                        decorate && circle(ctx, tripacked[0], tripacked[1], R, '#cf9', null);
+                    }
+                } else {
+                    console.log('no tricc', i, j);
+                }
+
+                if (decorate) {
+                    ctx.globalAlpha = 0.1;
+                    triangle(ctx, p1, p2, p3, '#fff', '#09f');
+                }
+            }
+        }
+
         ctx.globalAlpha = 1;
 
         var pointCount = points.length * points[0].length;
@@ -254,8 +332,11 @@
         console.log('Rendered ', pointCount, 'points in', new Date().getTime() - start, 'ms');
     }
 
-    scatter('#large', randomInRange(30, 50), randomInRange(3, 6), true);
+
+    scatter('#large', randomInRange(30, 50), randomInRange(3, 4), true);
     scatter('#small', 10, 0.5);
+    var m = randomInRange(15, 40);
+    scatter('#medium', m, m/randomInRange(10,15));
 
 
 

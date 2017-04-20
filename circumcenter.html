@@ -1,0 +1,232 @@
+<html>
+<head>
+    <style>
+        canvas {
+          border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="large" width="600" height="600"></canvas>
+    <canvas id="small" width="200" height="200"></canvas>
+    <script>
+    function randomInRange(min, max) {
+      return min + Math.random() * (max - min);
+    }
+
+    var floor = Math.floor;
+    var TWOPI = Math.PI * 2;
+  
+
+    function circle(ctx, point, R, stroke, fill) {
+        var x = point[0];
+        var y = point[1];
+
+        ctx.beginPath();
+        ctx.moveTo(x + R, y);
+        ctx.arc(x, y, R, 0, TWOPI, false);
+        if (stroke) {
+            ctx.strokeStyle = stroke;
+            ctx.stroke();
+        }
+        if (fill) {
+            ctx.fillStyle = fill;
+            ctx.fill();
+        }
+
+        ctx.closePath();
+    };
+
+    function triangle(ctx, p1, p2, p3, fill, stroke) {
+        if (fill) {
+            ctx.fillStyle = fill;
+        }
+        if (stroke) {
+            ctx.strokeStyle = stroke;
+        }
+        ctx.beginPath();
+        ctx.moveTo(p1[0], p1[1]);
+        ctx.lineTo(p2[0], p2[1]);
+        ctx.lineTo(p3[0], p3[1]);
+        ctx.closePath();
+        fill && ctx.fill();
+        stroke && ctx.stroke();
+    }
+
+    function distance(p1, p2) {
+        var dx = p2[0] - p1[0];
+        var dy = p2[1] - p1[1];
+        return Math.sqrt(dx * dx + dy * dy);        
+    }
+
+    function isTooClose(p1, p2, d) {
+        var dx = p2[0] - p1[0];
+        var dy = p2[1] - p1[1];
+        return ((dx * dx + dy * dy) < (d * d));
+    }
+
+    function avgPoint(p1, p2, p3) {
+        return [
+            (p1[0] + p2[0] + p3[0])/3,
+            (p1[1] + p2[1] + p3[1])/3
+         ];
+    }
+
+    function avgPoints(points) {
+        var avg=[0, 0];
+        avg[0] = points.reduce(function (m, v) { return m + v[0]; }, 0) / points.length;
+        avg[1] = points.reduce(function (m, v) { return m + v[1]; }, 0) / points.length;
+        return avg;
+    }
+
+    function centerpoint(a, b) {
+        return [(a[0] + b[0])/2, (a[1] + b[1])/2];
+    }
+
+    function drawcc(a, b, c, ctx, color, w) {
+        var ax = a[0];
+        var ay = a[1];
+        var bx = b[0];
+        var by = b[1];
+        var cx = c[0];
+        var cy = c[1];
+
+        // slopes
+        var mAB = (by - ay) / (bx - ax);
+        var mAC = (cy - ay) / (cx - ax);
+        // invert for perpendicular
+        mAB = -1/mAB;
+        mAC = -1/mAC;
+
+
+        var midAB = centerpoint(a, b);
+        var midAC = centerpoint(a, c);
+
+        var bAB = midAB[1] - mAB * midAB[0];
+        var bAC = midAC[1] - mAC * midAC[0];
+
+        var CCx;
+        var CCy;
+
+        CCx = (bAC - bAB) / (mAB - mAC);
+        CCy = mAB * CCx + bAB;
+
+
+        // draw midpoints
+        circle(ctx, midAB, 2, null, color);
+        circle(ctx, midAC, 2, null, color);
+
+        // with slopes and offsets, draw perp bisectors
+        ctx.strokeStyle = 'blue';
+        ctx.beginPath();
+        ctx.moveTo(0, bAB);
+        ctx.lineTo(w, mAB * w + bAB);
+        ctx.closePath();
+        ctx.stroke();
+
+        ctx.strokeStyle = 'green';
+        ctx.beginPath();
+        ctx.moveTo(0, bAC);
+        ctx.lineTo(w, mAC * w + bAC);
+        ctx.closePath();
+        ctx.stroke();
+
+
+        // draw circumcenter        
+        circle(ctx, [CCx, CCy], 10, 'red');
+
+        var dx = CCx - ax;
+        var dy = CCy - ay;
+        var r = Math.sqrt(dx * dx + dy * dy);
+        circle(ctx, [CCx, CCy], r, 'red');
+
+    }
+
+    function circumcenter(a, b, c) {
+        var ax = a[0];
+        var ay = a[1];
+        var bx = b[0];
+        var by = b[1];
+        var cx = c[0];
+        var cy = c[1];
+
+        // midpoints
+        var midAB = avgPoints([a, b]);
+        var midAC = avgPoints([a, c]);
+
+        // slopes
+        var mAB = (by - ay) / (bx - ax);
+        var mAC = (cy - ay) / (cx - ax);
+        // invert for perpendicular
+        mAB = -1/mAB;
+        mAC = -1/mAC;
+
+        // offsets
+        var bAB = midAB[1] - mAB * midAB[0];
+        var bAC = midAC[1] - mAC * midAC[0];
+
+        var CCx;
+        var CCy;
+
+        // algebra!
+        CCx = (bAC - bAB) / (mAB - mAC);
+        CCy = mAB * CCx + bAB;
+
+        var dx = CCx - ax;
+        var dy = CCy - ay;
+        var r = Math.sqrt(dx * dx + dy * dy);
+
+        return {x: CCx, y: CCy, r: r};
+    }
+
+    
+
+
+    function center(selector) {
+        var el = document.querySelector(selector);
+        var ctx = el.getContext('2d');
+        var w = el.width;
+        var h = el.height;
+        
+        var p1;
+        var p2;
+        var p3;
+
+        var centroid;
+        var circumcenter;
+
+        
+
+        function draw(color) {
+            p1 = [randomInRange(0, w), randomInRange(0, h)];
+            p2 = [randomInRange(0, w), randomInRange(0, h)];
+            p3 = [randomInRange(0, w), randomInRange(0, h)];    
+
+            //centroid = [ (p1[0] + p2[0] + p3[0])/3, (p1[1] + p2[1] + p3[1])/3 ];
+            //centroid = avgPoint(p1, p2, p3);
+            centroid = avgPoints([p1, p2, p3]);
+
+            triangle(ctx, p1, p2, p3, null, color);
+            circle(ctx, centroid, 
+                Math.max( Math.min(w,h)/100, 2),
+                color);
+
+            drawcc(p1, p2, p3, ctx, color, w);
+        }
+
+        draw('#000');
+        /*draw('#39c');
+        draw('#a6f');*/
+        
+    }
+
+    center('#large', randomInRange(30, 50), randomInRange(3, 6), true);
+    center('#small', 15, 0.5);
+
+
+
+
+
+</script>
+</body>
+</html>
