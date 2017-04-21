@@ -177,6 +177,8 @@
         var points = [];
         var topTriangles = [];
 
+        var renderCount = rows * cols; // track points and repacking.
+
         // placement vars
         var cc; // circumcenter from points
         var packed = []; // coords from cc
@@ -252,6 +254,7 @@
                 if (cc.r > spacing) {
                     circle(ctx, packed[0], packed[1], pointSize, null, '#009');
                     decorate && circle(ctx, packed[0], packed[1], R, '#cf9');
+                    renderCount++;
                 } else {
                     decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa', null);
                     decorate && circle(ctx, packed[0], packed[1], R, '#fdc', null);
@@ -338,6 +341,7 @@
                 if (ccOK) {
                     //console.log('packed');
                     circle(ctx, packed[0], packed[1], pointSize, null, '#900');
+                    renderCount++;
                     decorate && circle(ctx, packed[0], packed[1], R, '#cf9', null);
                 } else {
                     decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa', '#fff');
@@ -348,6 +352,7 @@
                     if (tripOK) {
                         //console.log('tripacked');
                         circle(ctx, tripacked[0], tripacked[1], pointSize, null, '#900');
+                        renderCount++;
                         decorate && circle(ctx, tripacked[0], tripacked[1], R, '#cf9', null);
                     } else {
                         decorate && cross(ctx, tripacked[0], tripacked[1], pointSize, '#faa', '#fff');
@@ -361,6 +366,7 @@
                     if (ccOK) {
                         //console.log('avg packed');
                         circle(ctx, packed[0], packed[1], pointSize, null, '#900');
+                        renderCount++;
                         decorate && circle(ctx, packed[0], packed[1], R, '#cf9', null);
                     } else {
                         decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa', '#fff');
@@ -379,9 +385,7 @@
 
         ctx.globalAlpha = 1;
 
-        var pointCount = points.length * points[0].length;
-
-        console.log('Rendered ', pointCount, 'points in', new Date().getTime() - start, 'ms');
+        console.log('Rendered ', renderCount, 'points in', new Date().getTime() - start, 'ms');
     }
 
 
