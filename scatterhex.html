@@ -163,9 +163,6 @@
         var w = el.width;
         var h = el.height;
 
-        console.log(spacing, gridSize, R);
-
-
         /*ctx.scale(0.8, 0.8);
         ctx.translate( w/10, h/10);*/
 
@@ -329,7 +326,7 @@
                 }
 
                 var tripOK = false;
-                if (tricc) {
+                if (tricc && !ccOK) {
                     tripOK = (tricc.r > spacing);
 
                     if (tripOK) {
@@ -339,7 +336,7 @@
 
 
                 if (ccOK) {
-                    console.log('packed');
+                    //console.log('packed');
                     circle(ctx, packed[0], packed[1], pointSize, null, '#900');
                     decorate && circle(ctx, packed[0], packed[1], R, '#cf9', null);
                 } else {
@@ -347,9 +344,9 @@
                     decorate && circle(ctx, packed[0], packed[1], R, '#fdc', '#fff');
                 }
 
-                if (tricc) {
-                    if (!ccOK && tripOK) {
-                        console.log('tripacked');
+                if (tricc && !ccOK) {
+                    if (tripOK) {
+                        //console.log('tripacked');
                         circle(ctx, tripacked[0], tripacked[1], pointSize, null, '#900');
                         decorate && circle(ctx, tripacked[0], tripacked[1], R, '#cf9', null);
                     } else {
@@ -362,7 +359,7 @@
                     packed = avgPoints([packed, tripacked]);
                     ccOK = checkSet(packed, [p1, p2, p3, pp1, pp2, pp3], spacing);
                     if (ccOK) {
-                        console.log('avg packed');
+                        //console.log('avg packed');
                         circle(ctx, packed[0], packed[1], pointSize, null, '#900');
                         decorate && circle(ctx, packed[0], packed[1], R, '#cf9', null);
                     } else {
