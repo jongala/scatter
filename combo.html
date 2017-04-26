@@ -1,0 +1,195 @@
+<html>
+<head>
+    <style>
+        canvas {
+          border: 1px solid #ddd;
+          display: block;
+          clear: both;
+        }
+
+        html {
+            margin: 0;
+            padding: 20px;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+    </style>
+</head>
+<body>
+    <canvas id="bridson" width="960" height="500"></canvas>
+    <canvas id="hex" width="960" height="500"></canvas>
+    <canvas id="rand" width="960" height="500"></canvas>
+
+    <script src="d3.min.js"></script>
+    <script src="cubehelix.min.js"></script>
+
+    <script src="hexScatter.js"></script>
+    <script src="bridson.js"></script>
+
+    <script>
+    function randomInRange(min, max) {
+      return min + Math.random() * (max - min);
+    }
+
+    function circle(ctx, x, y, R, stroke, fill) {
+        ctx.beginPath();
+        ctx.moveTo(x + R, y);
+        ctx.arc(x, y, R, 0, Math.PI * 2, false);
+        ctx.closePath();
+
+        ctx.strokeStyle = stroke || '';
+        stroke && ctx.stroke();
+        ctx.fillStyle = fill || '';
+        fill && ctx.fill();
+    };
+
+    function drawPath(ctx, ps, fill){
+      fill && (ctx.fillStyle = fill);
+
+      ctx.beginPath();
+      ctx.moveTo(ps[0][0], ps[0][1]);
+      for (var i = 1; i < ps.length ; i++) {
+        ctx.lineTo(ps[i][0], ps[i][1]);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+
+
+    var width = 960;
+    var height = 480;
+
+    document.querySelectorAll('canvas').forEach((c) => {
+        console.log(c);
+        c.width = width;
+        c.height = height;
+    })
+
+
+    var start;
+
+    // Bridson
+    var sample = poissonDiscSampler(width, height, 10);
+    var bridsonPts = [];
+    console.log('poisson sampler');
+    start = new Date().getTime();
+    while (s = sample()) {
+      bridsonPts.push(s);
+    }
+    console.log('done in ' + (new Date().getTime() - start) + 'ms : ' + bridsonPts.length + ' pts');
+
+    console.log('-------------------------');
+
+
+    
+
+    // Hex
+    start = new Date().getTime();
+    console.log('hex scatter');
+    
+    var hexPts = hexScatter(10*1.026, width, height);
+
+    console.log('done in ' + (new Date().getTime() - start) + 'ms : ' + hexPts.length + ' pts');
+
+    console.log('-------------------------');
+    
+
+
+    // Random
+    start = new Date().getTime();
+    console.log('random scatter');
+    
+    var randPts = [];
+    for (var i = 0; i < bridsonPts.length ; i++) {
+        randPts.push([randomInRange(0, width), randomInRange(0, height)]);
+    }
+
+    console.log('done in ' + (new Date().getTime() - start) + 'ms : ' + randPts.length + ' pts');
+
+    console.log('-------------------------');
+
+
+
+    // Paint!
+
+
+    function drawPoints(ctx, pts) {
+        for (var p = 0; p < pts.length ; p++) {
+            circle(ctx, pts[p][0], pts[p][1], 2, null, '#000');
+        }    
+    }
+
+    var bridsonEl = document.querySelector('#bridson');
+    var bridsonCtx = bridsonEl.getContext('2d');
+    drawPoints(bridsonCtx, bridsonPts);
+
+    var hexEl = document.querySelector('#hex');
+    var hexCtx = hexEl.getContext('2d');
+    drawPoints(hexCtx, hexPts);
+
+    var randEl = document.querySelector('#rand');
+    var randCtx = randEl.getContext('2d');
+    drawPoints(randCtx, randPts);
+
+
+
+    
+
+//  Voronoi!!!
+
+
+    function paintVoronoi(ctx, pts) {
+        var voronoi = d3.geom.voronoi().clipExtent([[0, 0], [width, height]]);
+        var v = d3.geom.voronoi(pts);
+        var min, max;
+
+        var areas = [];
+        v.forEach((p) => {
+          areas.push(d3.geom.polygon(p).area())
+        });
+
+        var sorted = areas.sort((a, b) => {return a-b});
+
+        /*var min = sorted[0];
+        var max = min + 2 * (sorted[Math.floor(sorted.length/2)] - min); */
+        console.log(sorted[0]);
+
+        min = 50;
+        max = 275;
+
+        ctx.rect(width/2, 0, width/2, height);
+        ctx.clip();
+
+        console.log(min, max);
+
+        var color = d3.scale.cubehelix()
+            .domain([min, max])
+            //.range([d3.hsl(96, .6, 1), d3.hsl(276, .6, 0)])
+            //.range([d3.hsl(96, .6, 0.7), d3.hsl(276, .6, 0)])
+            .range([d3.hsl(276, .6, 0), d3.hsl(76, .6, 1)])
+            .clamp(true);
+
+        //ctx.globalAlpha = 0.95;
+        //ctx.globalCompositeOperation = 'multiply';
+        v.forEach((p, i) => {
+          drawPath(ctx, p, color(d3.geom.polygon(p).area()));
+        });
+    }
+
+
+    paintVoronoi(bridsonCtx, bridsonPts);
+    paintVoronoi(hexCtx, hexPts);
+    paintVoronoi(randCtx, randPts);
+
+
+
+
+
+
+
+</script>
+</body>
+</html>

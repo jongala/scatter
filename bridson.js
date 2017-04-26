@@ -1,100 +1,3 @@
-<!DOCTYPE html>
-<meta charset="utf-8">
-<body>
-<canvas id="example" width="960" height="500"></canvas>
-<!--<script src="http://d3js.org/d3.v3.min.js"></script>-->
-<script src="d3.min.js"></script>
-<script src="cubehelix.min.js"></script>
-<script>
-
-var width = 960,
-    height = 500;
-
-var canvas = document.querySelector('#example');
-var ctx = canvas.getContext('2d');
-
-var sample = poissonDiscSampler(width, height, 10);
-
-
-function randomInRange(min, max) {
-  return min + Math.random() * (max - min);
-}
-
-function circle(ctx, x, y, R, stroke, fill) {
-    ctx.beginPath();
-    ctx.moveTo(x + R, y);
-    ctx.arc(x, y, R, 0, Math.PI * 2, false);
-    ctx.closePath();
-
-    ctx.strokeStyle = stroke || '';
-    stroke && ctx.stroke();
-    ctx.fillStyle = fill || '';
-    fill && ctx.fill();
-};
-
-
-function drawPath(ps, fill){
-  fill && (ctx.fillStyle = fill);
-
-  ctx.beginPath();
-  ctx.moveTo(ps[0][0], ps[0][1]);
-  for (var i = 1; i < ps.length ; i++) {
-    ctx.lineTo(ps[i][0], ps[i][1]);
-  }
-  ctx.closePath();
-  ctx.fill();
-}
-
-
-
-var pts = [];
-var s;
-var start = new Date().getTime();
-console.log('poisson sampler');
-while (s = sample()) {
-  pts.push(s);
-}
-console.log('done in ' + (new Date().getTime() - start) + 'ms : ' + pts.length + ' pts');
-
-
-for (var p = 0; p < pts.length ; p++) {
-  circle(ctx, pts[p][0], pts[p][1], 2, null, '#000');
-}
-
-// Now do voronoi
-
-var voronoi = d3.geom.voronoi().clipExtent([[0, 0], [width, height]])
-var v = d3.geom.voronoi(pts);
-
-var areas = [];
-v.forEach((p) => {
-  areas.push(d3.geom.polygon(p).area())
-});
-
-var sorted = areas.sort((a, b) => {return a-b});
-
-var min = sorted[0];
-var max = min + 2 * (sorted[Math.floor(sorted.length/2)] - min); 
-
-min = 100;
-max = 300;
-
-console.log(min, max);
-
-var color = d3.scale.cubehelix()
-    .domain([min, max])
-    //.range([d3.hsl(96, .6, 1), d3.hsl(276, .6, 0)])
-    .range([d3.hsl(96, .6, 0.7), d3.hsl(276, .6, 0)])
-    .clamp(true);
-
-ctx.globalCompositeOperation = 'multiply';
-v.forEach((p, i) => {
-  drawPath(p, color(d3.geom.polygon(p).area()));
-});
-
-
-
-
 // Based on https://www.jasondavies.com/poisson-disc/
 function poissonDiscSampler(width, height, radius) {
   var k = 30, // maximum number of samples before rejection
@@ -142,7 +45,7 @@ function poissonDiscSampler(width, height, radius) {
       queue[i] = queue[--queueSize];
       queue.length = queueSize;
     }
-    console.log(` ${sampleSize} samples from ${attempts} attempts, ` + (sampleSize/attempts * 100).toPrecision(2) + '% efficiency');
+    console.log(`${sampleSize} samples from ${attempts} attempts, ` + (sampleSize/attempts * 100).toPrecision(2) + '% efficiency');
     return false;
   };
 
@@ -185,31 +88,18 @@ function poissonDiscSampler(width, height, radius) {
     var room = 0;
     var full = 0;
 
-    ctx.globalAlpha = 0.1;
-
     for (j = j0; j < j1; ++j) {
       var o = j * gridWidth;
       for (i = i0; i < i1; ++i) {
         if (i !== ii && j != jj && grid[o + i]) {
           //console.log('found', grid[o + i]);
-          //console.log('check', i, ii, j, jj);
           full++;
-          
-          //ctx.fillStyle = 'red';
-          //ctx.fillRect(i * cellSize, j * cellSize, cellSize, cellSize);
-          
         } else {
-          //ctx.fillStyle = 'green';
-          //ctx.fillRect(i * cellSize, j * cellSize, cellSize, cellSize);
-
           room++;
-          //room = true;
           //console.log('nothing in', grid[o + i], o, i);
         }
       }
     }
-    //console.log(room, full);
-    ctx.globalAlpha = 1;
     return room;
   }
 
@@ -223,5 +113,3 @@ function poissonDiscSampler(width, height, radius) {
     return s;
   }
 }
-
-</script>
