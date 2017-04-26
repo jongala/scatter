@@ -16,6 +16,9 @@
             padding: 0;
         }
 
+        canvas {
+            height: 240px;
+        }
     </style>
 </head>
 <body>
@@ -157,8 +160,8 @@
         var max = min + 2 * (sorted[Math.floor(sorted.length/2)] - min); */
         console.log(sorted[0]);
 
-        min = 50;
-        max = 275;
+        min = 0;
+        max = 550;
 
         ctx.rect(width/2, 0, width/2, height);
         ctx.clip();
@@ -168,12 +171,9 @@
         var color = d3.scale.cubehelix()
             .domain([min, max])
             //.range([d3.hsl(96, .6, 1), d3.hsl(276, .6, 0)])
-            //.range([d3.hsl(96, .6, 0.7), d3.hsl(276, .6, 0)])
-            .range([d3.hsl(276, .6, 0), d3.hsl(76, .6, 1)])
+            .range([d3.hsl(276, .6, 0), d3.hsl(36, .6, 1)])
             .clamp(true);
 
-        //ctx.globalAlpha = 0.95;
-        //ctx.globalCompositeOperation = 'multiply';
         v.forEach((p, i) => {
           drawPath(ctx, p, color(d3.geom.polygon(p).area()));
         });
