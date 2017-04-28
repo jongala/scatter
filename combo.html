@@ -157,26 +157,42 @@
           areas.push(d3.geom.polygon(p).area())
         });
 
-        //var sorted = areas.sort((a, b) => {return a-b});
-        //console.log(sorted[0], sorted[sorted.length -1]);
-
         min = 0;
         max = 550;
 
+        var BINSIZE = 50;
+        var HISTWIDTH = width/10;
+
+        var bins = d3.range(min, max, BINSIZE);
+        var binnedAreas = d3.layout.histogram()
+            .bins(bins)(areas);
+        //console.log(binnedAreas);
+
+        ctx.beginPath();
         ctx.rect(width/2, 0, width/2, height);
         ctx.clip();
+        ctx.closePath();
 
         console.log(min, max);
 
         var color = d3.scale.cubehelix()
             .domain([min, max])
-            //.range([d3.hsl(96, .6, 1), d3.hsl(276, .6, 0)])
             .range([d3.hsl(276, .6, 0), d3.hsl(36, .6, 1)])
             .clamp(true);
 
         v.forEach((p, i) => {
           drawPath(ctx, p, color(d3.geom.polygon(p).area()));
         });
+
+        ctx.clearRect(width-HISTWIDTH, 0, width, height);
+
+        var step = height/bins.length;
+
+        binnedAreas.forEach(function(a, i) {
+            ctx.fillStyle = color(i * BINSIZE);
+            ctx.fillRect(width - HISTWIDTH, i * step, a.length/19, step);
+        });
+
     }
 
 
