@@ -157,23 +157,24 @@
           areas.push(d3.geom.polygon(p).area())
         });
 
+        areas.sort((a,b) => a-b);
+
+
         min = 0;
         max = 550;
 
-        var BINSIZE = 50;
+        var BINCOUNT = 20;
+        var BINSIZE = (max - min)/BINCOUNT;
         var HISTWIDTH = width/10;
 
         var bins = d3.range(min, max, BINSIZE);
         var binnedAreas = d3.layout.histogram()
             .bins(bins)(areas);
-        //console.log(binnedAreas);
 
         ctx.beginPath();
-        ctx.rect(width/2, 0, width/2, height);
+        ctx.rect((width - HISTWIDTH)/2, 0, width, height);
         ctx.clip();
         ctx.closePath();
-
-        console.log(min, max);
 
         var color = d3.scale.cubehelix()
             .domain([min, max])
@@ -184,15 +185,17 @@
           drawPath(ctx, p, color(d3.geom.polygon(p).area()));
         });
 
+        var barScale = d3.scale.linear().domain([0, areas[areas.length -1]])
+            .range([0, HISTWIDTH]);
+
         ctx.clearRect(width-HISTWIDTH, 0, width, height);
 
         var step = height/bins.length;
 
         binnedAreas.forEach(function(a, i) {
             ctx.fillStyle = color(i * BINSIZE);
-            ctx.fillRect(width - HISTWIDTH, i * step, a.length/19, step);
+            ctx.fillRect(width - HISTWIDTH, i * step, barScale(a.length), step);
         });
-
     }
 
 
