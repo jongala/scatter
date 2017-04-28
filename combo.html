@@ -150,29 +150,26 @@
         // space out the extents so edge areas are more normal
         var voronoi = d3.geom.voronoi().clipExtent([[-3, -3], [width + 3, height + 3]]);
         var v = voronoi(pts);//d3.geom.voronoi(pts);
-        var min, max;
+        var min,
+            max;
 
         var areas = [];
         v.forEach((p) => {
           areas.push(d3.geom.polygon(p).area())
         });
 
-        areas.sort((a,b) => a-b);
-
-
+        // magic numbers to have consistent color scale across function types
         min = 0;
         max = 550;
 
         var BINCOUNT = 20;
         var BINSIZE = (max - min)/BINCOUNT;
         var HISTWIDTH = width/10;
+        var HIST_X = width - HISTWIDTH;
 
-        var bins = d3.range(min, max, BINSIZE);
-        var binnedAreas = d3.layout.histogram()
-            .bins(bins)(areas);
-
+        // clip the voronoi rendering to part of canvas
         ctx.beginPath();
-        ctx.rect((width - HISTWIDTH)/2, 0, width, height);
+        ctx.rect(HIST_X/2, 0, width, height);
         ctx.clip();
         ctx.closePath();
 
@@ -185,16 +182,23 @@
           drawPath(ctx, p, color(d3.geom.polygon(p).area()));
         });
 
-        var barScale = d3.scale.linear().domain([0, areas[areas.length -1]])
-            .range([0, HISTWIDTH]);
+        // render histogram
 
-        ctx.clearRect(width-HISTWIDTH, 0, width, height);
-
+        var bins = d3.range(min, max, BINSIZE);
+        var binnedAreas = d3.layout.histogram()
+            .bins(bins)(areas);
         var step = height/bins.length;
 
+        // get count of fullest bin for bar scaling
+        var maxAreaCount = d3.max(binnedAreas, (a) => a.length);
+        var barScale = d3.scale.linear().domain([0, maxAreaCount])
+            .range([0, HISTWIDTH]);
+
+        // draw it
+        ctx.clearRect(HIST_X, 0, width, height);
         binnedAreas.forEach(function(a, i) {
             ctx.fillStyle = color(i * BINSIZE);
-            ctx.fillRect(width - HISTWIDTH, i * step, barScale(a.length), step);
+            ctx.fillRect(HIST_X, i * step, barScale(a.length), step);
         });
     }
 
