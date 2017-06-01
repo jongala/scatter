@@ -51,16 +51,6 @@
             ]);
         }
 
-        /*
-        for (var row = 0 ; row <= rows ; row++) {
-            var r = [];
-            for (var col = 0 ; col <= cols ; col++) {
-                offset = (row % 2)? (- scale * 0.8660 ) : 0;
-                r.push([col * hexW + offset, row * hexH]);
-            }
-            points.push(r);
-        }*/
-
         return points;
     }
 
@@ -210,8 +200,6 @@
         var el = document.querySelector(selector);
         var ctx = el.getContext('2d');
 
-
-
         var gridSize = spacing * 1.5;
         var R = spacing/2;
         var cellR = gridSize - R;
@@ -220,10 +208,6 @@
 
         var hexW = 2 * 0.8660 * gridSize;
         var hexH = 1.5 * gridSize;
-
-
-        /*ctx.scale(0.8, 0.8);
-        ctx.translate( w/10, h/10);*/
 
         var cols = Math.ceil(w / hexW) + 1;
         var rows = Math.ceil(h / hexH) + 1;
@@ -252,9 +236,6 @@
 
         var start = new Date().getTime();
         console.log('start drawing');
-        console.log(cols + 'cols');
-        console.log(rows + 'rows');
-
 
         ctx.font = '12px sans-serif';
 
@@ -377,10 +358,7 @@
             if (hasTriangles) {
                 tricc = circumcenter(pp1, pp2, pp3);
                 tripacked = [tricc.x, tricc.y];
-            } else {
-                console.log('no tripack points');
             }
-
 
             ctx.globalAlpha = 1;
 
@@ -402,7 +380,7 @@
 
 
             if (ccOK) {
-                console.log('packed');
+                //console.log('packed');
                 circle(ctx, packed[0], packed[1], pointSize, null, '#900');
                 renderCount++;
                 decorate && circle(ctx, packed[0], packed[1], R, '#cf9', null);
@@ -413,7 +391,7 @@
 
             if (tricc && !ccOK) {
                 if (tripOK) {
-                    console.log('tripacked');
+                    //console.log('tripacked');
                     circle(ctx, tripacked[0], tripacked[1], pointSize, null, '#900');
                     renderCount++;
                     decorate && circle(ctx, tripacked[0], tripacked[1], R, '#cf9', null);
@@ -427,7 +405,7 @@
                 packed = avgPoints([packed, tripacked]);
                 ccOK = checkSet(packed, [p1, p2, p3, pp1, pp2, pp3], spacing);
                 if (ccOK) {
-                    console.log('avg packed');
+                    //console.log('avg packed');
                     circle(ctx, packed[0], packed[1], pointSize, null, '#900');
                     renderCount++;
                     decorate && circle(ctx, packed[0], packed[1], R, '#cf9', null);
@@ -443,193 +421,6 @@
                 triangle(ctx, p1, p2, p3, '#fff', '#09f');
             }            
         }
-
-        /*layout.forEach(function(p, i) {
-                var x = p[0];
-                var y = p[1];
-
-                if (decorate) {
-                    ctx.globalCompositeOperation = 'screen';
-                    ctx.globalAlpha = 0.33;
-
-
-                    // the area
-
-                    circle(ctx, x, y, gridSize, '#f99', '#fdd');
-                    ctx.globalCompositeOperation = 'normal';
-                    circle(ctx, x, y, cellR, '#f99', '#fff');
-                    ctx.globalCompositeOperation = 'multiply';
-
-
-                    ctx.globalAlpha = 1;
-                }
-
-                // the point
-                var a = randomInRange(0, TWOPI);
-                var v = randomInRange(0, cellR - pointSize);
-                var px = x + v * Math.cos(a);
-                var py = y + v * Math.sin(a);
-
-                points[row].push([px, py]);
-
-                circle(ctx, px, py, pointSize, null, '#000');
-
-                // show point exclusion zone
-                if (decorate) {
-                    circle(ctx, px, py, R, '#ace', '#fff');
-                }
-        });*/
-
-/*
-        // now pack points in top triangles
-        var grid = points;
-        for (var i = 0 ; i < grid.length - 1 ; i++) {
-            var rowlen = grid[i].length;
-            for (var j = 0; j < rowlen - 1 ; j++) {
-                var nextRowColOffset = (i % 2) ? 0 : 1;
-
-                // top triangles: get points from grid
-                var p1 = grid[i][j];
-                var p2 = grid[i][j + 1];
-                var p3 = grid[i + 1][j + nextRowColOffset];
-
-                cc = circumcenter(p1, p2, p3);
-                packed = [cc.x, cc.y];
-
-                topTriangles[i].push(packed);
-
-                ctx.globalAlpha = 1;
-                if (cc.r > spacing) {
-                    circle(ctx, packed[0], packed[1], pointSize, null, '#009');
-                    decorate && circle(ctx, packed[0], packed[1], R, '#cf9');
-                    renderCount++;
-                } else {
-                    decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa', null);
-                    decorate && circle(ctx, packed[0], packed[1], R, '#fdc', null);
-                }
-
-                if (decorate) {
-                    ctx.globalAlpha = 0.2;
-                    triangle(ctx, p1, p2, p3, '#fff', '#ffc');
-                }
-            }
-        }
-
-
-        // now pack points in bottom triangles
-        //var grid = points;
-        for (var i = 0 ; i < grid.length - 1 ; i++) {
-            var rowlen = grid[i].length;
-            for (var j = 0; j < rowlen ; j++) {
-                // bottom triangles
-
-                var odd = (i % 2);
-
-                if ( odd ) {
-                    if (j === 0) {
-                        continue;
-                    }
-                } else {
-                    if (j === rowlen -1) {
-                        continue;
-                    }
-                }
-
-                var colOffset = odd ? -1 : 0 ;
-
-                var p1 = grid[i][j];
-                var p2 = grid[i + 1][j + colOffset + 1];
-                var p3 = grid[i + 1][j + colOffset];
-
-
-                var pp1;
-                var pp2;
-                var pp3;
-
-                if (odd) {
-                    pp1 = topTriangles[i][j];
-                    pp2 = topTriangles[i][j-1];
-                    pp3 = topTriangles[i + 1][j + colOffset];
-                } else {
-                    pp1 = topTriangles[i][j];
-                    pp2 = topTriangles[i][j-1];
-                    pp3 = topTriangles[i + 1][j];
-                }
-
-                cc = circumcenter(p1, p2, p3);
-                packed = [cc.x, cc.y];
-
-                var hasTriangles = pp1 && pp2 && pp3;
-
-                if (hasTriangles) {
-                    tricc = circumcenter(pp1, pp2, pp3);
-                    tripacked = [tricc.x, tricc.y];
-                }
-
-
-                ctx.globalAlpha = 1;
-
-                // check circumcenter against its component points
-                var ccOK = (cc.r > spacing);
-                // now check against the neighboring packed points
-                if (ccOK && hasTriangles) {
-                    ccOK = checkSet(packed, [pp1, pp2, pp3], spacing);
-                }
-
-                var tripOK = false;
-                if (tricc && !ccOK) {
-                    tripOK = (tricc.r > spacing);
-
-                    if (tripOK) {
-                        tripOK = checkSet(tripacked, [p1,p2,p3], spacing);
-                    }
-                }
-
-
-                if (ccOK) {
-                    //console.log('packed');
-                    circle(ctx, packed[0], packed[1], pointSize, null, '#900');
-                    renderCount++;
-                    decorate && circle(ctx, packed[0], packed[1], R, '#cf9', null);
-                } else {
-                    decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa', '#fff');
-                    decorate && circle(ctx, packed[0], packed[1], R, '#fdc', '#fff');
-                }
-
-                if (tricc && !ccOK) {
-                    if (tripOK) {
-                        //console.log('tripacked');
-                        circle(ctx, tripacked[0], tripacked[1], pointSize, null, '#900');
-                        renderCount++;
-                        decorate && circle(ctx, tripacked[0], tripacked[1], R, '#cf9', null);
-                    } else {
-                        decorate && cross(ctx, tripacked[0], tripacked[1], pointSize, '#faa', '#fff');
-                        decorate && circle(ctx, tripacked[0], tripacked[1], R, '#fdc', '#fff');
-                    }
-                }
-
-                if (!ccOK && !tripOK && tricc && hasTriangles) {
-                    packed = avgPoints([packed, tripacked]);
-                    ccOK = checkSet(packed, [p1, p2, p3, pp1, pp2, pp3], spacing);
-                    if (ccOK) {
-                        //console.log('avg packed');
-                        circle(ctx, packed[0], packed[1], pointSize, null, '#900');
-                        renderCount++;
-                        decorate && circle(ctx, packed[0], packed[1], R, '#cf9', null);
-                    } else {
-                        decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa', '#fff');
-                        decorate && circle(ctx, packed[0], packed[1], R, '#fdc', '#fff');
-                    }
-
-                }
-
-
-                if (decorate) {
-                    ctx.globalAlpha = 0.1;
-                    triangle(ctx, p1, p2, p3, '#fff', '#09f');
-                }
-            }
-        }*/
 
         ctx.globalAlpha = 1;
 
