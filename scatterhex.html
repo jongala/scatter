@@ -267,7 +267,7 @@
 
             var fillColor = row % 2 ? '#fdd' : '#def';
 
-            /*if (decorate) {
+            if (decorate) {
                 ctx.globalCompositeOperation = 'screen';
                 ctx.globalAlpha = 0.33;
 
@@ -278,22 +278,14 @@
                 ctx.globalCompositeOperation = 'multiply';
 
                 ctx.globalAlpha = 1;
-                
-            }*/
-
-
-
+            }
 
             // the point
             var a = randomInRange(0, TWOPI);
             var v = randomInRange(0, cellR - pointSize);
             var px = x + v * Math.cos(a);
             var py = y + v * Math.sin(a);
-            //circle(ctx, px, py, pointSize, null, '#000');
-            cross(ctx, px, py, pointSize, null, '#000');
-            ctx.fillStyle = '#000';
-            ctx.fillText(i, px, py);
-
+            circle(ctx, px, py, pointSize, null, '#000');
             points.push([px, py]);
 
             // show point exclusion zone
@@ -301,13 +293,6 @@
                 circle(ctx, px, py, R, '#ace', '#fff');
 
             }
-
-            ctx.globalCompositeOperation = 'multiply';
-
-                ctx.globalAlpha = 1;
-            
-
-
         });
 
         // Pack points in top triangles
@@ -331,15 +316,10 @@
             topTriangles[i] = (packed);
 
             ctx.globalAlpha = 1;
-            
-            //cross(ctx, packed[0], packed[1], pointSize, '#009');
 
             if (cc.r > spacing) {
-                //circle(ctx, packed[0], packed[1], pointSize, null, '#69f');
-                ctx.fillStyle = '#69f';
-                ctx.fillText(i, packed[0], packed[1]);
+                circle(ctx, packed[0], packed[1], pointSize, null, '#69f');
                 decorate && circle(ctx, packed[0], packed[1], R, '#cf9');
-
                 renderCount++;
             } else {
                 decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa', null);
@@ -367,107 +347,42 @@
                 continue;
             }
 
-            
-
-
             var colOffset = odd ? 0 : 1;
 
             var p1 = grid[i];
             var p2 = grid[i + 1];
             var p3 = grid[i - cols + colOffset];
 
-            // mark base point
-            cross(ctx, p1[0], p1[1], pointSize * 1.5, '#f99', Math.PI/4);
-
             cc = circumcenter(p1, p2, p3);
             packed = [cc.x, cc.y];
 
-            // triangle edge links
-            //decorate && drawEdges(ctx, p1, p2, p3);
-
             ctx.globalAlpha = 1;
-
-            // tentative point at grid circumcenter
-            cross(ctx, packed[0], packed[1], pointSize, '#f99', Math.PI/4);
-            line(ctx, packed, p1, '#f90');
 
             var pp1;
             var pp2;
             var pp3;
 
-            colOffset = odd ? -1 : 0 ;
-
-
-            if (odd && step >= (cols -1) ) {
-                continue;
-            }
-
-            if (!odd && step >= (cols - 2) ) {
-                //continue;
-            }
-
-
-
-            /*pp1 = topTriangles[i - cols - 1 + colOffset];
-            pp2 = topTriangles[i - cols - 0 + colOffset];
-            pp3 = topTriangles[i - 1 + colOffset];*/
-
-
-            if (odd) {
-                pp1 = topTriangles[i - cols - 1 - 1];
-                pp2 = topTriangles[i - cols - 0 - 1];
-                pp3 = topTriangles[i - 1 - 1];
-            } else {
-                pp1 = topTriangles[i - cols - 1 ];
-                pp2 = topTriangles[i - cols - 0 ];
-                pp3 = topTriangles[i - 1 - 1 ];
-            }
-
             if (odd) {
                 pp1 = topTriangles[i - cols - 1 ];
                 pp2 = topTriangles[i - cols - 0 ];
-                pp3 = topTriangles[i + 0];
+                pp3 = topTriangles[i];
             } else {
-                pp1 = topTriangles[i - cols  + 0 ];
+                pp1 = topTriangles[i - cols + 0 ];
                 pp2 = topTriangles[i - cols + 1 ];
-                pp3 = topTriangles[i + 0];
+                pp3 = topTriangles[i];
             }
-
-            
 
             var hasTriangles = pp1 && pp2 && pp3;
 
             if (hasTriangles) {
-                odd 
-                   ? cross(ctx, pp1[0], pp1[1], 2 * pointSize, '#f66', Math.PI/4)
-                   : cross(ctx, pp1[0], pp1[1], 2 * pointSize, '#69f', 0);
-
                 tricc = circumcenter(pp1, pp2, pp3);
                 tripacked = [tricc.x, tricc.y];
-
-                decorate && drawEdges(ctx, pp1, pp2, pp3);
-
-                //console.log('tripack odd', odd);
-                ctx.globalAlpha = 0.3;
-
-                line(ctx, p1, pp1, '#f90');
-
-                //line(ctx, tripacked, p1, 'red', 0.2);
-                //line(ctx, tripacked, pp1, 'red', 0.2);
-
-                /*line(ctx, pp1, tripacked, '#f33');
-                line(ctx, pp2, tripacked, '#f33');
-                line(ctx, pp3, tripacked, '#f33');*/
-                //line(ctx, p1, tripacked, '#0cf');
-                //line(ctx, pp1, tripacked, '#0cf');
-                //cross(ctx, tripacked[0], tripacked[1], pointSize, '#f33', 0);
-                ctx.globalAlpha = 1;
             } else {
                 console.log('no tripack points');
             }
 
 
-            /*ctx.globalAlpha = 1;
+            ctx.globalAlpha = 1;
 
             // check circumcenter against its component points
             var ccOK = (cc.r > spacing);
@@ -487,7 +402,7 @@
 
 
             if (ccOK) {
-                //console.log('packed');
+                console.log('packed');
                 circle(ctx, packed[0], packed[1], pointSize, null, '#900');
                 renderCount++;
                 decorate && circle(ctx, packed[0], packed[1], R, '#cf9', null);
@@ -498,7 +413,7 @@
 
             if (tricc && !ccOK) {
                 if (tripOK) {
-                    //console.log('tripacked');
+                    console.log('tripacked');
                     circle(ctx, tripacked[0], tripacked[1], pointSize, null, '#900');
                     renderCount++;
                     decorate && circle(ctx, tripacked[0], tripacked[1], R, '#cf9', null);
@@ -512,7 +427,7 @@
                 packed = avgPoints([packed, tripacked]);
                 ccOK = checkSet(packed, [p1, p2, p3, pp1, pp2, pp3], spacing);
                 if (ccOK) {
-                    //console.log('avg packed');
+                    console.log('avg packed');
                     circle(ctx, packed[0], packed[1], pointSize, null, '#900');
                     renderCount++;
                     decorate && circle(ctx, packed[0], packed[1], R, '#cf9', null);
@@ -523,12 +438,10 @@
 
             }
 
-
             if (decorate) {
                 ctx.globalAlpha = 0.1;
                 triangle(ctx, p1, p2, p3, '#fff', '#09f');
-            }*/
-            
+            }            
         }
 
         /*layout.forEach(function(p, i) {
