@@ -75,9 +75,10 @@
 
 
     var start;
+    var SPACING = 10;
 
     // Bridson
-    var sample = poissonDiscSampler(width, height, 10);
+    var sample = poissonDiscSampler(width, height, SPACING);
     var bridsonPts = [];
     console.log('poisson sampler');
     start = new Date().getTime();
@@ -95,7 +96,7 @@
     start = new Date().getTime();
     console.log('hex scatter');
     
-    var hexPts = hexScatter(10*1.026, width, height);
+    var hexPts = hexScatter(SPACING * 1.026, width, height);
 
     console.log('done in ' + (new Date().getTime() - start) + 'ms : ' + hexPts.length + ' pts');
 

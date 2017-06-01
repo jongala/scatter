@@ -38,8 +38,18 @@
         var hexH = scale * 1.5;
         var rows = Math.ceil(h/hexH);
         var cols = Math.ceil(w/hexW);
+        var count = rows * cols;
         var offset;
+        var row;
 
+        for (var i = 0 ; i < count ; i++) {
+            row = Math.floor(i / cols);
+            offset = (row % 2) ? (- scale * 0.8660 ) : 0;
+            offset += hexH / 2;
+            points.push([i % cols * hexW + offset, row * hexH]);
+        }
+
+        /*
         for (var row = 0 ; row <= rows ; row++) {
             var r = [];
             for (var col = 0 ; col <= cols ; col++) {
@@ -47,7 +57,7 @@
                 r.push([col * hexW + offset, row * hexH]);
             }
             points.push(r);
-        }
+        }*/
 
         return points;
     }
@@ -77,17 +87,31 @@
         fill && ctx.fill();
     }
 
-    function cross(ctx, x, y, size, color) {
+    function cross(ctx, x, y, size, color, angle) {
+        angle = angle || 0;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
         size = size || 5;
         color = color || 'black';
         ctx.beginPath();
-        ctx.moveTo(x - size, y);
-        ctx.lineTo(x + size, y);
-        ctx.moveTo(x, y - size);
-        ctx.lineTo(x, y + size);
+        ctx.moveTo(-size, 0);
+        ctx.lineTo(+size, 0);
+        ctx.moveTo(0, -size);
+        ctx.lineTo(0, +size);
         ctx.closePath();
         ctx.strokeStyle = color;
         ctx.stroke();
+        ctx.restore();
+    }
+
+    function line(ctx, p1, p2, color) {
+        ctx.beginPath();
+        ctx.strokeStyle = color || 'black';
+        ctx.moveTo(p1[0], p1[1]);
+        ctx.lineTo(p2[0], p2[1]);
+        ctx.stroke();
+        ctx.closePath();
     }
 
     function avgPoints(points) {
@@ -148,6 +172,32 @@
         return {x: CCx, y: CCy, r: r};
     }
 
+    function drawEdges(ctx, p1, p2, p3) {
+        ctx.globalAlpha = 0.2;
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.strokeWidth = 1;
+        
+        ctx.beginPath();
+        ctx.moveTo(p1[0], p1[1]);
+        ctx.strokeStyle = '#f00';
+        ctx.lineTo(p2[0], p2[1]);
+        ctx.stroke();
+        ctx.closePath();
+
+        ctx.beginPath();
+        ctx.moveTo(p2[0], p2[1]);
+        ctx.strokeStyle = '#00f';
+        ctx.lineTo(p3[0], p3[1]);
+        ctx.stroke();
+        ctx.closePath();
+
+        ctx.beginPath();
+        ctx.strokeStyle = '#0a0';
+        ctx.moveTo(p3[0], p3[1]);
+        ctx.lineTo(p1[0], p1[1]);
+        ctx.stroke();
+        ctx.closePath();
+    }
 
 
 
@@ -163,11 +213,17 @@
         var w = el.width;
         var h = el.height;
 
+        var hexW = 2 * 0.8660 * gridSize;
+        var hexH = 1.5 * gridSize;
+
+
         /*ctx.scale(0.8, 0.8);
         ctx.translate( w/10, h/10);*/
 
-        var cols = Math.floor(w / gridSize);
-        var rows = Math.floor(h / gridSize);
+        var cols = Math.ceil(w / hexW);
+        var rows = Math.ceil(h / hexH);
+        var row; // current row in loops
+        var col; // current col in loops
 
         ctx.fillStyle = 'black';
         ctx.strokeStyle = '#ccc';
@@ -191,11 +247,218 @@
 
         var start = new Date().getTime();
         console.log('start drawing');
+        console.log(cols + 'cols');
+        console.log(rows + 'rows');
 
-        layout.forEach(function(r, row) {
-            points.push([]);
-            topTriangles.push([]);
-            r.forEach(function(p, col) {
+        // Main points
+        layout.forEach(function(p, i) {
+            var x = p[0];
+            var y = p[1];
+
+            row = Math.floor(i / cols);
+
+            var fillColor = row % 2 ? '#fdd' : '#def';
+
+            if (decorate) {
+                ctx.globalCompositeOperation = 'screen';
+                ctx.globalAlpha = 0.33;
+
+                // the exclusion ring
+                circle(ctx, x, y, gridSize, '#f99', fillColor);
+                ctx.globalCompositeOperation = 'normal';
+                circle(ctx, x, y, cellR, '#f99', '#fff');
+                ctx.globalCompositeOperation = 'multiply';
+
+                ctx.globalAlpha = 1;
+            }
+
+
+            // the point
+            var a = randomInRange(0, TWOPI);
+            var v = randomInRange(0, cellR - pointSize);
+            var px = x + v * Math.cos(a);
+            var py = y + v * Math.sin(a);
+            circle(ctx, px, py, pointSize, null, '#000');
+
+            points.push([px, py]);
+
+            // show point exclusion zone
+            if (decorate) {
+                circle(ctx, px, py, R, '#ace', '#fff');
+            }
+        });
+
+        // Pack points in top triangles
+        var grid = points;
+        for (var i = 0 ; i < grid.length - cols ; i++) {            
+            row = Math.floor(i / cols);
+
+            if (i % cols >= cols - 1) {
+                continue;
+            }
+
+            var nextRowColOffset = (row % 2) ? 0 : 1;
+
+            // top triangles: get points from grid
+            var p1 = grid[i];
+            var p2 = grid[i + 1];
+            var p3 = grid[i + cols +  nextRowColOffset];
+
+            cc = circumcenter(p1, p2, p3);
+            packed = [cc.x, cc.y];
+            topTriangles.push(packed);
+
+            ctx.globalAlpha = 1;
+            
+            //cross(ctx, packed[0], packed[1], pointSize, '#009');
+
+            if (cc.r > spacing) {
+                circle(ctx, packed[0], packed[1], pointSize, null, '#69f');
+                decorate && circle(ctx, packed[0], packed[1], R, '#cf9');
+                renderCount++;
+            } else {
+                decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa', null);
+                decorate && circle(ctx, packed[0], packed[1], R, '#fdc', null);
+            }
+
+            if (decorate) {
+                ctx.globalAlpha = 0.2;
+                triangle(ctx, p1, p2, p3, '#fff', '#ffc');
+            }
+            
+        }
+
+        // now pack points in bottom triangles
+        //var grid = points;
+        for (var i = cols ; i < grid.length - 1 ; i++) {
+            // bottom triangles
+                
+            row = Math.floor(i / cols);
+            if (i % cols >= cols - 1) {
+                continue;
+            }
+
+            var odd = (row % 2);
+
+            var colOffset = odd ? 0 : -1 ;
+
+            var p1 = grid[i];
+            var p2 = grid[i + 1];
+            var p3 = grid[i - cols + colOffset];
+
+            cc = circumcenter(p1, p2, p3);
+            packed = [cc.x, cc.y];
+
+            // triangle edge links
+            decorate && drawEdges(ctx, p1, p2, p3);
+
+            ctx.globalAlpha = 1;
+
+            // tentative point at grid circumcenter
+            cross(ctx, packed[0], packed[1], pointSize, '#6a6', Math.PI/4);
+            //line(ctx, packed, p1, '#f90');
+
+            var pp1;
+            var pp2;
+            var pp3;
+
+            if (odd) {
+                pp1 = topTriangles[i - cols - 1];
+                pp2 = topTriangles[i - cols ];
+                pp3 = topTriangles[i + colOffset - 1];
+            } else {
+                pp1 = topTriangles[i - cols - 1];
+                pp2 = topTriangles[i - cols];
+                pp3 = topTriangles[i + colOffset - 1];
+            }
+
+            var hasTriangles = pp1 && pp2 && pp3;
+
+            if (hasTriangles) {
+                tricc = circumcenter(pp1, pp2, pp3);
+                tripacked = [tricc.x, tricc.y];
+
+                decorate && drawEdges(ctx, pp1, pp2, pp3);
+
+                console.log('tripack odd', odd);
+                ctx.globalAlpha = 0.3;
+                /*line(ctx, pp1, tripacked, '#f33');
+                line(ctx, pp2, tripacked, '#f33');
+                line(ctx, pp3, tripacked, '#f33');*/
+                //line(ctx, p1, tripacked, '#0cf');
+                //line(ctx, pp1, tripacked, '#0cf');
+                //cross(ctx, tripacked[0], tripacked[1], pointSize, '#f33', 0);
+                ctx.globalAlpha = 1;
+            } else {
+                console.log('no tripack points');
+            }
+
+
+            /*ctx.globalAlpha = 1;
+
+            // check circumcenter against its component points
+            var ccOK = (cc.r > spacing);
+            // now check against the neighboring packed points
+            if (ccOK && hasTriangles) {
+                ccOK = checkSet(packed, [pp1, pp2, pp3], spacing);
+            }
+
+            var tripOK = false;
+            if (tricc && !ccOK) {
+                tripOK = (tricc.r > spacing);
+
+                if (tripOK) {
+                    tripOK = checkSet(tripacked, [p1,p2,p3], spacing);
+                }
+            }
+
+
+            if (ccOK) {
+                //console.log('packed');
+                circle(ctx, packed[0], packed[1], pointSize, null, '#900');
+                renderCount++;
+                decorate && circle(ctx, packed[0], packed[1], R, '#cf9', null);
+            } else {
+                decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa', '#fff');
+                decorate && circle(ctx, packed[0], packed[1], R, '#fdc', '#fff');
+            }
+
+            if (tricc && !ccOK) {
+                if (tripOK) {
+                    //console.log('tripacked');
+                    circle(ctx, tripacked[0], tripacked[1], pointSize, null, '#900');
+                    renderCount++;
+                    decorate && circle(ctx, tripacked[0], tripacked[1], R, '#cf9', null);
+                } else {
+                    decorate && cross(ctx, tripacked[0], tripacked[1], pointSize, '#faa', '#fff');
+                    decorate && circle(ctx, tripacked[0], tripacked[1], R, '#fdc', '#fff');
+                }
+            }
+
+            if (!ccOK && !tripOK && tricc && hasTriangles) {
+                packed = avgPoints([packed, tripacked]);
+                ccOK = checkSet(packed, [p1, p2, p3, pp1, pp2, pp3], spacing);
+                if (ccOK) {
+                    //console.log('avg packed');
+                    circle(ctx, packed[0], packed[1], pointSize, null, '#900');
+                    renderCount++;
+                    decorate && circle(ctx, packed[0], packed[1], R, '#cf9', null);
+                } else {
+                    decorate && circle(ctx, packed[0], packed[1], pointSize, '#faa', '#fff');
+                    decorate && circle(ctx, packed[0], packed[1], R, '#fdc', '#fff');
+                }
+
+            }
+
+
+            if (decorate) {
+                ctx.globalAlpha = 0.1;
+                triangle(ctx, p1, p2, p3, '#fff', '#09f');
+            }*/
+            
+        }
+
+        /*layout.forEach(function(p, i) {
                 var x = p[0];
                 var y = p[1];
 
@@ -229,10 +492,9 @@
                 if (decorate) {
                     circle(ctx, px, py, R, '#ace', '#fff');
                 }
-            });
-        });
+        });*/
 
-
+/*
         // now pack points in top triangles
         var grid = points;
         for (var i = 0 ; i < grid.length - 1 ; i++) {
@@ -381,7 +643,7 @@
                     triangle(ctx, p1, p2, p3, '#fff', '#09f');
                 }
             }
-        }
+        }*/
 
         ctx.globalAlpha = 1;
 
