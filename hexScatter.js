@@ -11,17 +11,19 @@ function hexScatter(spacing, w, h, loosen) {
         var points = [];
         var hexW = 2 * scale * 0.8660;
         var hexH = scale * 1.5;
-        var rows = Math.ceil(h/hexH);
-        var cols = Math.ceil(w/hexW);
+        var rows = Math.ceil(h/hexH) + 1;
+        var cols = Math.ceil(w/hexW) + 1;
+        var count = rows * cols;
         var offset;
+        var row;
 
-        for (var row = 0 ; row <= rows ; row++) {
-            var r = [];
-            for (var col = 0 ; col <= cols ; col++) {
-                offset = (row % 2)? (- scale * 0.8660 ) : 0;
-                r.push([col * hexW + offset, row * hexH]);
-            }
-            points.push(r);
+        for (var i = 0 ; i < count ; i++) {
+            row = Math.floor(i / cols);
+            offset = (row % 2) ? (- scale * 0.8660 ) : 0;
+            points.push([
+                i % cols * hexW + offset,
+                row * hexH
+            ]);
         }
 
         return points;
@@ -90,8 +92,12 @@ function hexScatter(spacing, w, h, loosen) {
     var R = spacing/2;
     var cellR = gridSize - R;
 
-    var cols = Math.floor(w / gridSize);
-    var rows = Math.floor(h / gridSize);;
+    var hexW = 2 * 0.8660 * gridSize;
+    var hexH = 1.5 * gridSize;
+    var cols = Math.ceil(w / hexW) + 1;
+    var rows = Math.ceil(h / hexH) + 1;
+    var row; // current row in loops
+    var col; // current col in loops
 
     var layout = getTiledLayout(w, h, gridSize);
     // [rows…][cols]
@@ -112,153 +118,132 @@ function hexScatter(spacing, w, h, loosen) {
 
     var start = new Date().getTime();
 
-    layout.forEach(function(r, row) {
-        points.push([]);
-        topTriangles.push([]);
-        r.forEach(function(p, col) {
-            var x = p[0];
-            var y = p[1];
+    layout.forEach(function(p, i) {
+        var x = p[0];
+        var y = p[1];
 
-            // the point
-            var a = randomInRange(0, TWOPI);
-            var v = randomInRange(0, cellR);
-            var px = x + v * Math.cos(a);
-            var py = y + v * Math.sin(a);
+        // the point
+        var a = randomInRange(0, TWOPI);
+        var v = randomInRange(0, cellR);
+        var px = x + v * Math.cos(a);
+        var py = y + v * Math.sin(a);
 
-            points[row].push([px, py]);
-            out.push([px, py]);
+        points.push([px, py]);
+        out.push([px, py]);
 
-            attempts++;
-        });
+        attempts++;
     });
 
 
     // now pack points in top triangles
     var grid = points;
-    for (var i = 0 ; i < grid.length - 1 ; i++) {
-        var rowlen = grid[i].length;
-        for (var j = 0; j < rowlen - 1 ; j++) {
-            var nextRowColOffset = (i % 2) ? 0 : 1;
+    for (var i = 0 ; i < grid.length - cols ; i++) {
+        row = Math.floor(i / cols);
 
-            // top triangles: get points from grid
-            var p1 = grid[i][j];
-            var p2 = grid[i][j + 1];
-            var p3 = grid[i + 1][j + nextRowColOffset];
+        if (i % cols >= cols - 1) {
+            continue;
+        }
 
-            cc = circumcenter(p1, p2, p3);
-            packed = [cc.x, cc.y];
-            attempts++;
+        var nextRowColOffset = (row % 2) ? 0 : 1;
+        // top triangles: get points from grid
+        var p1 = grid[i];
+        var p2 = grid[i + 1];
+        var p3 = grid[i + cols +  nextRowColOffset];
 
-            topTriangles[i].push(packed);
+        cc = circumcenter(p1, p2, p3);
+        packed = [cc.x, cc.y];
+        attempts++;
 
-            if (cc.r > spacing) {
-                out.push(packed);
-                renderCount++;
-            }
+        topTriangles[i] = packed;
+
+        if (cc.r > spacing) {
+            out.push(packed);
+            renderCount++;
         }
     }
-
 
     // now pack points in bottom triangles
-    //var grid = points;
-    for (var i = 0 ; i < grid.length - 1 ; i++) {
-        var rowlen = grid[i].length;
-        for (var j = 0; j < rowlen ; j++) {
-            // bottom triangles
+    for (var i = cols ; i < grid.length - 1 ; i++) {
+        row = Math.floor(i / cols);
 
-            var odd = (i % 2);
+        var odd = row % 2; // odd or even row
+        var step = i % cols; // step within a row
 
-            if ( odd ) {
-                if (j === 0) {
-                    continue;
-                }
-            } else {
-                if (j === rowlen -1) {
-                    continue;
-                }
-            }
+        if (step >= cols - 1) {
+            continue;
+        }
 
-            var colOffset = odd ? -1 : 0 ;
+        var colOffset = odd ? 0 : 1;
 
-            var p1 = grid[i][j];
-            var p2 = grid[i + 1][j + colOffset + 1];
-            var p3 = grid[i + 1][j + colOffset];
+        var p1 = grid[i];
+        var p2 = grid[i + 1];
+        var p3 = grid[i - cols + colOffset];
 
+        cc = circumcenter(p1, p2, p3);
+        packed = [cc.x, cc.y];
+        attempts++;
 
-            var pp1;
-            var pp2;
-            var pp3;
+        var pp1;
+        var pp2;
+        var pp3;
 
-            if (odd) {
-                pp1 = topTriangles[i][j];
-                pp2 = topTriangles[i][j-1];
-                pp3 = topTriangles[i + 1][j + colOffset];
-            } else {
-                pp1 = topTriangles[i][j];
-                pp2 = topTriangles[i][j-1];
-                pp3 = topTriangles[i + 1][j];
-            }
+        if (odd) {
+            pp1 = topTriangles[i - cols - 1 ];
+            pp2 = topTriangles[i - cols - 0 ];
+            pp3 = topTriangles[i];
+        } else {
+            pp1 = topTriangles[i - cols + 0 ];
+            pp2 = topTriangles[i - cols + 1 ];
+            pp3 = topTriangles[i];
+        }
 
-            cc = circumcenter(p1, p2, p3);
-            packed = [cc.x, cc.y];
+        var hasTriangles = pp1 && pp2 && pp3;
+
+        if (hasTriangles) {
+            tricc = circumcenter(pp1, pp2, pp3);
+            tripacked = [tricc.x, tricc.y];
             attempts++;
+        }
 
-            var hasTriangles = pp1 && pp2 && pp3;
+        // check circumcenter against its component points
+        var ccOK = (cc.r > spacing);
+        // now check against the neighboring packed points
+        if (ccOK && hasTriangles) {
+            ccOK = checkSet(packed, [pp1, pp2, pp3], spacing);
+        }
 
-            if (hasTriangles) {
-                tricc = circumcenter(pp1, pp2, pp3);
-                tripacked = [tricc.x, tricc.y];
-                attempts++;
+        var tripOK = false;
+        if (tricc && !ccOK) {
+            tripOK = (tricc.r > spacing);
+
+            if (tripOK) {
+                tripOK = checkSet(tripacked, [p1,p2,p3], spacing);
             }
+        }
 
-            // check circumcenter against its component points
-            var ccOK = (cc.r > spacing);
-            // now check against the neighboring packed points
-            if (ccOK && hasTriangles) {
-                ccOK = checkSet(packed, [pp1, pp2, pp3], spacing);
+
+        if (ccOK) {
+            out.push(packed);
+            renderCount++;
+        }
+
+        if (tricc && !ccOK) {
+            if (tripOK) {
+                out.push(tripacked);
+                renderCount++;
             }
+        }
 
-            var tripOK = false;
-            if (tricc && !ccOK) {
-                tripOK = (tricc.r > spacing);
-
-                if (tripOK) {
-                    tripOK = checkSet(tripacked, [p1,p2,p3], spacing);
-                }
-            }
-
-
+        if (!ccOK && !tripOK && tricc && hasTriangles) {
+            packed = avgPoints([packed, tripacked]);
+            attempts++;
+            ccOK = checkSet(packed, [p1, p2, p3, pp1, pp2, pp3], spacing);
             if (ccOK) {
-                //console.log('packed');
-                //circle(ctx, packed[0], packed[1], pointSize, null, '#000');
                 out.push(packed);
                 renderCount++;
             }
-
-            if (tricc && !ccOK) {
-                if (tripOK) {
-                    //console.log('tripacked');
-                    //circle(ctx, tripacked[0], tripacked[1], pointSize, null, '#000');
-                    out.push(tripacked);
-                    renderCount++;
-                }
-            }
-
-            if (!ccOK && !tripOK && tricc && hasTriangles) {
-                packed = avgPoints([packed, tripacked]);
-                attempts++;
-                ccOK = checkSet(packed, [p1, p2, p3, pp1, pp2, pp3], spacing);
-                if (ccOK) {
-                    //console.log('avg packed');
-                    //circle(ctx, packed[0], packed[1], pointSize, null, '#000');
-                    out.push(packed);
-                    renderCount++;
-                }
-
-            }
         }
     }
-
 
     var count  = out.length;
 

@@ -77,15 +77,18 @@
     var start;
     var SPACING = 10;
 
+    var elapsed;
+
     // Bridson
     var sample = poissonDiscSampler(width, height, SPACING);
     var bridsonPts = [];
-    console.log('poisson sampler');
+    console.log('poisson sampler, Bridson\'s algorithm');
     start = new Date().getTime();
     while (s = sample()) {
       bridsonPts.push(s);
     }
-    console.log('done in ' + (new Date().getTime() - start) + 'ms : ' + bridsonPts.length + ' pts');
+    elapsed = (new Date().getTime() - start);
+    console.log('done in ' + elapsed + 'ms : ' + bridsonPts.length + '  ; ' +  Math.round(bridsonPts.length/elapsed) + ' pts/ms.');
 
     console.log('-------------------------');
 
@@ -98,8 +101,8 @@
     
     var hexPts = hexScatter(SPACING * 1.026, width, height);
 
-    console.log('done in ' + (new Date().getTime() - start) + 'ms : ' + hexPts.length + ' pts');
-
+    elapsed = (new Date().getTime() - start);
+    console.log('done in ' + elapsed + 'ms : ' + hexPts.length + '  ; ' +  Math.round(hexPts.length/elapsed) + ' pts/ms.');
     console.log('-------------------------');
     
 
@@ -113,7 +116,8 @@
         randPts.push([randomInRange(0, width), randomInRange(0, height)]);
     }
 
-    console.log('done in ' + (new Date().getTime() - start) + 'ms : ' + randPts.length + ' pts');
+    elapsed = (new Date().getTime() - start);
+    console.log('done in ' + elapsed + 'ms : ' + randPts.length + ' pts ; ' +  Math.round(randPts.length/elapsed) + ' pts/ms.');
 
     console.log('-------------------------');
 
