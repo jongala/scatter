@@ -21,14 +21,6 @@ function poissonDiscSampler(width, height, radius) {
       var i = Math.random() * queueSize | 0,
           s = queue[i];
 
-      // first check the current sample and see if it neighboring cells have points
-      if (!hasRoom(s[0], s[1])) {
-        console.log('early');
-        queue[i] = queue[--queueSize];
-        queue.length = queueSize;
-        continue;
-      }
-
       // Make a new candidate between [radius, 2 * radius] from the existing sample.
       for (var j = 0; j < k; ++j) {
         var a = 2 * Math.PI * Math.random(),
@@ -71,36 +63,6 @@ function poissonDiscSampler(width, height, radius) {
     }
 
     return true;
-  }
-
-  function hasRoom(x, y) {
-    var i = x / cellSize | 0,
-        j = y / cellSize | 0,
-        i0 = Math.max(i - 2, 0),
-        j0 = Math.max(j - 2, 0),
-        i1 = Math.min(i + 3, gridWidth),
-        j1 = Math.min(j + 3, gridHeight),
-        p;
-
-    var ii = i;
-    var jj = j;
-
-    var room = 0;
-    var full = 0;
-
-    for (j = j0; j < j1; ++j) {
-      var o = j * gridWidth;
-      for (i = i0; i < i1; ++i) {
-        if (i !== ii && j != jj && grid[o + i]) {
-          //console.log('found', grid[o + i]);
-          full++;
-        } else {
-          room++;
-          //console.log('nothing in', grid[o + i], o, i);
-        }
-      }
-    }
-    return room;
   }
 
 

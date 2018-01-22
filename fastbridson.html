@@ -8,7 +8,18 @@
 var width = 960,
     height = 500;
 
-var sample = poissonDiscSampler(width, height, 15);
+var sample = poissonDiscSampler(width, height, 7);
+
+function render_pts(pts, svg) {
+  svg.selectAll('circle')
+    .data(pts)
+    .enter()
+    .append("circle")
+        .attr("fill", "#000")
+        .attr("cx", function(s){return s[0]})
+        .attr("cy", function(s){return s[1]})
+        .attr("r", 2);
+}
 
 var svg = d3.select("body").append("svg");
 svg.attr("width", width)
@@ -17,20 +28,17 @@ svg.attr("width", width)
 var pts = [];
 var s;
 var start = new Date().getTime();
+
 console.log('poisson sampler');
+
 while (s = sample()) {
   pts.push(s);
 }
-console.log('done', new Date().getTime() - start, pts.length);
 
-svg.selectAll('circle')
-  .data(pts)
-  .enter()
-  .append("circle")
-      .attr("fill", "#000")
-      .attr("cx", function(s){return s[0]})
-      .attr("cy", function(s){return s[1]})
-      .attr("r", 2);
+console.log(`Done : ${new Date().getTime() - start} ms / ${pts.length} pts  `);
+
+// draw after timer
+render_pts(pts, svg);
 
 
 
@@ -81,7 +89,7 @@ function poissonDiscSampler(width, height, radius) {
       queue[i] = queue[--queueSize];
       queue.length = queueSize;
     }
-    console.log(sampleSize, 'samples from', attempts, 'attempts');
+    console.log(`${sampleSize} samples from ${attempts} attempts, ` + (sampleSize/attempts * 100).toPrecision(2) + '% efficiency');
     return false;
   };
 
