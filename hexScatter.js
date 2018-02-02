@@ -1,6 +1,17 @@
 function hexScatter(spacing, w, h, loosen) {
-    var floor = Math.floor;
+    loosen = loosen || 1.25;
+
     var TWOPI = Math.PI * 2;
+
+    var gridSize = spacing * loosen;
+    var R = spacing/2;
+    var cellR = gridSize - R;
+    var hexW = 2 * 0.8660 * gridSize;
+    var hexH = 1.5 * gridSize;
+    var cols = Math.ceil(w / hexW) + 1;
+    var rows = Math.ceil(h / hexH) + 1;
+    var row; // current row in loops
+    var col; // current col in loops
 
     function randomInRange(min, max) {
       return min + Math.random() * (max - min);
@@ -87,17 +98,7 @@ function hexScatter(spacing, w, h, loosen) {
         return {x: CCx, y: CCy, r: r};
     }
 
-    loosen = loosen || 1.25;
-    var gridSize = spacing * loosen;
-    var R = spacing/2;
-    var cellR = gridSize - R;
 
-    var hexW = 2 * 0.8660 * gridSize;
-    var hexH = 1.5 * gridSize;
-    var cols = Math.ceil(w / hexW) + 1;
-    var rows = Math.ceil(h / hexH) + 1;
-    var row; // current row in loops
-    var col; // current col in loops
 
     var layout = getTiledLayout(w, h, gridSize);
     // [rows…][cols]
