@@ -65,7 +65,8 @@
             col = (j%2) ? i + 1 : i;
             cell = grid[col][j];
 
-            ctx.fillStyle = 'rgba(0, 150, 255, 0.1)';
+            //ctx.fillStyle = 'rgba(0, 150, 255, 0.1)';
+            ctx.fillStyle = 'white';
             ctx.fillRect(
                 cell[0] - cellSize/2,
                 cell[1] - cellSize/2,
@@ -93,7 +94,8 @@
             col = (j%2) ? i - 1 : i;
             cell = grid[col][j];
 
-            ctx.fillStyle = 'rgba(255, 200, 0, 0.1)';
+            //ctx.fillStyle = 'rgba(255, 200, 0, 0.1)';
+            ctx.fillStyle = '#f6f6f6';
             ctx.fillRect(
                 cell[0] - cellSize/2,
                 cell[1] - cellSize/2,
@@ -118,21 +120,6 @@
             ctx.closePath();
         }
     }
-
-    /*grid.forEach(function(col, i) {
-        col.forEach(function(cell, j) {
-            cell[0] += randomInRange(-r, r);
-            cell[1] += randomInRange(-r, r);
-            ctx.beginPath();
-            ctx.arc(
-              cell[0],
-              cell[1], 
-              cellSize/10,
-              0, TWOPI, false);
-            ctx.fill();
-            ctx.closePath();
-        });
-    });*/
 
 </script>
 </body>
