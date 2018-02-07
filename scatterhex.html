@@ -171,14 +171,14 @@
         var el = document.querySelector(selector);
         var ctx = el.getContext('2d');
 
-        var gridSize = spacing * 1.25;
+        var gridSize = spacing * 1.25 ;
         var R = spacing/2;
         var cellR = gridSize - R;
         var w = el.width;
         var h = el.height;
 
-        var hexW = 2 * 0.8660 * gridSize;
-        var hexH = 1.5 * gridSize;
+        var hexW = 2 * gridSize;
+        var hexH = 1.5 * gridSize / .866;
 
         var cols = Math.ceil(w / hexW) + 1;
         var rows = Math.ceil(h / hexH) + 1;
@@ -188,7 +188,7 @@
         ctx.fillStyle = 'black';
         ctx.strokeStyle = '#ccc';
 
-        var layout = getTiledLayout(w, h, gridSize);
+        var layout = getTiledLayout(w, h, gridSize / 0.866);
         // [rows…][cols]
         var points = [];
         var topPacked = [];

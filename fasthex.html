@@ -155,7 +155,7 @@
 
 
 
-        var gridSize = spacing * 1.66;
+        var gridSize = spacing * 1.3;
         var R = spacing/2;
         var cellR = gridSize - R;
         var w = el.width;
@@ -164,15 +164,17 @@
         var cols = Math.floor(w / gridSize);
         var rows = Math.floor(h / gridSize);
 
+        console.log(rows, cols)
+
         ctx.fillStyle = 'black';
         ctx.strokeStyle = '#ccc';
 
-        var layout = getTiledLayout(w, h, gridSize);
+        var layout = getTiledLayout(w, h, gridSize / .866);
         // [rows…][cols]
         var points = [];
         var topTriangles = [];
 
-        var renderCount = rows * cols; // track points and repacking.
+        var renderCount = 0; rows * cols; // track points and repacking.
 
         // placement vars
         var cc; // circumcenter from points

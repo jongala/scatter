@@ -6,8 +6,8 @@ function hexScatter(spacing, w, h, loosen) {
     var gridSize = spacing * loosen;
     var R = spacing/2;
     var cellR = gridSize - R;
-    var hexW = 2 * 0.8660 * gridSize;
-    var hexH = 1.5 * gridSize;
+    var hexW = 2 * gridSize;
+    var hexH = 1.5 * gridSize / 0.866;
     var cols = Math.ceil(w / hexW) + 1;
     var rows = Math.ceil(h / hexH) + 1;
     var row; // current row in loops
@@ -100,7 +100,7 @@ function hexScatter(spacing, w, h, loosen) {
 
 
 
-    var layout = getTiledLayout(w, h, gridSize);
+    var layout = getTiledLayout(w, h, gridSize / .866);
     // [rows…][cols]
     var points = [];
     var topTriangles = [];
